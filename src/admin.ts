@@ -22,12 +22,15 @@ import {
  */
 export function authenticateAPIKey(request: Request, env: Env): boolean {
   const authHeader = request.headers.get('Authorization');
+  console.log('API auth check - header:', authHeader, 'expected:', env.API_SECRET);
   if (!authHeader) return false;
   
   const parts = authHeader.split(' ');
   if (parts.length !== 2 || parts[0] !== 'Bearer') return false;
   
-  return parts[1] === env.API_SECRET;
+  const isValid = parts[1] === env.API_SECRET;
+  console.log('API auth result:', isValid, 'provided:', parts[1]);
+  return isValid;
 }
 
 /**
@@ -92,15 +95,37 @@ async function verifySessionCookie(cookieValue: string, secret: string): Promise
  * Check if user is authenticated via session cookie
  */
 async function isAuthenticated(request: Request, env: Env): Promise<boolean> {
-  if (!env.API_SECRET) return true; // No auth required if no secret set (dev mode)
+  if (!env.API_SECRET) {
+    console.log('No API_SECRET set, allowing access');
+    return true; // No auth required if no secret set (dev mode)
+  }
   
   const cookies = request.headers.get('Cookie');
-  if (!cookies) return false;
+  console.log('Checking authentication, cookies:', cookies);
+  if (!cookies) {
+    console.log('No cookies found');
+    return false;
+  }
   
-  const sessionMatch = cookies.match(/session=([^;]+)/);
-  if (!sessionMatch) return false;
+  // Parse cookies more reliably to avoid conflicts with other session cookies
+  const cookiePairs = cookies.split(';').map(c => c.trim());
+  let sessionValue = null;
   
-  const timestamp = await verifySessionCookie(sessionMatch[1], env.API_SECRET);
+  for (const pair of cookiePairs) {
+    if (pair.startsWith('url_shortener_session=')) {
+      sessionValue = pair.substring('url_shortener_session='.length);
+      break;
+    }
+  }
+  
+  console.log('Found url_shortener_session cookie value:', sessionValue);
+  if (!sessionValue) {
+    console.log('No url_shortener_session cookie found');
+    return false;
+  }
+  
+  const timestamp = await verifySessionCookie(sessionValue, env.API_SECRET);
+  console.log('Session verification result:', timestamp);
   return timestamp !== null;
 }
 
@@ -112,7 +137,7 @@ async function createSessionCookie(env: Env, isSecure: boolean = true): Promise<
   const cookieValue = await signSessionCookie(timestamp, env.API_SECRET);
   
   const secureFlag = isSecure ? '; Secure' : '';
-  return `session=${cookieValue}; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=${7 * 24 * 60 * 60}; Path=/`;
+  return `url_shortener_session=${cookieValue}; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=${7 * 24 * 60 * 60}; Path=/`;
 }
 
 // ========== API Endpoints ==========
@@ -751,7 +776,7 @@ async function handleAuthRoutes(request: Request, env: Env): Promise<Response> {
       status: 302,
       headers: {
         'Location': new URL('/admin/login', request.url).toString(),
-        'Set-Cookie': `session=; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=0; Path=/`
+        'Set-Cookie': `url_shortener_session=; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=0; Path=/`
       }
     });
   }
@@ -774,18 +799,28 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
     return await handleAuthRoutes(request, env);
   }
   
-  // Check authentication for all other admin routes
-  const authenticated = await isAuthenticated(request, env);
-  if (!authenticated) {
-    // Redirect to login page for HTML requests
-    if (method === 'GET' && !path.startsWith('/admin/urls')) {
+  // For API endpoints, check both cookie and API key authentication
+  if (path.startsWith('/admin/urls') || path === '/admin/backup') {
+    const cookieAuth = await isAuthenticated(request, env);
+    const apiKeyAuth = authenticateAPIKey(request, env);
+    
+    if (!cookieAuth && !apiKeyAuth) {
+      // Redirect to login page for HTML requests (no auth header = browser)
+      if (method === 'GET' && !request.headers.get('Authorization')) {
+        return Response.redirect(new URL('/admin/login', request.url).toString(), 302);
+      }
+      // Return JSON error for API requests
+      return new Response(JSON.stringify({ error: 'Unauthorized - please login' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  } else {
+    // For HTML interface routes, only check cookie authentication
+    const authenticated = await isAuthenticated(request, env);
+    if (!authenticated) {
       return Response.redirect(new URL('/admin/login', request.url).toString(), 302);
     }
-    // Return JSON error for API requests
-    return new Response(JSON.stringify({ error: 'Unauthorized - please login' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' }
-    });
   }
   
   // API endpoints
@@ -802,21 +837,7 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
       });
     }
     
-    // Public endpoint - no auth required
-    if (method === 'GET' && path === '/admin/urls') {
-      return handleListURLs(request, env);
-    }
-    
-    // All other API endpoints require authentication
-    if (!authenticateAPIKey(request, env)) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 
-          'Content-Type': 'application/json',
-          'WWW-Authenticate': 'Bearer'
-        }
-      });
-    }
+    // Handle API endpoints (authentication already checked above)
     
     // Route API requests
     if (method === 'POST' && path === '/admin/urls') {
