@@ -1,23 +1,19 @@
 import { Env, URLRecord } from './types';
-
-// Import utility functions from index.ts
-declare function checkRateLimit(env: Env, key: string, limit: number, window: number): Promise<boolean>;
-declare function isDangerousURL(url: string): boolean;
-declare function isValidURL(url: string): boolean;
-declare function normalizeURL(url: string): string;
-declare function isValidCustomSlug(slug: string): boolean;
-declare function generateUniqueSlug(env: Env): Promise<string>;
-declare function fetchPageMetadata(url: string, timeout?: number): Promise<{
-  title?: string;
-  description?: string;
-  image?: string;
-}>;
-declare function storeURL(env: Env, record: URLRecord): Promise<void>;
-declare function getURL(env: Env, slug: string): Promise<URLRecord | null>;
-declare function updateURL(env: Env, slug: string, updates: Partial<URLRecord>): Promise<void>;
-declare function deleteURL(env: Env, slug: string): Promise<void>;
-declare function listAllURLs(env: Env): Promise<URLRecord[]>;
-declare function escapeHTML(str: string): string;
+import { 
+  checkRateLimit, 
+  isDangerousURL, 
+  isValidURL, 
+  normalizeURL, 
+  isValidCustomSlug, 
+  generateUniqueSlug, 
+  fetchPageMetadata, 
+  storeURL, 
+  getURL, 
+  updateURL, 
+  deleteURL, 
+  listAllURLs, 
+  escapeHTML 
+} from './index';
 
 // ========== Authentication ==========
 

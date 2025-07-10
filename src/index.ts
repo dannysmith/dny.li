@@ -7,7 +7,7 @@ import { handleAdminRequest } from './admin';
 /**
  * Store a URL record in KV storage
  */
-async function storeURL(env: Env, record: URLRecord): Promise<void> {
+export async function storeURL(env: Env, record: URLRecord): Promise<void> {
   const key = `urls:${record.slug}`;
   await env.URLS_KV.put(key, JSON.stringify(record));
 }
@@ -15,7 +15,7 @@ async function storeURL(env: Env, record: URLRecord): Promise<void> {
 /**
  * Retrieve a URL record from KV storage
  */
-async function getURL(env: Env, slug: string): Promise<URLRecord | null> {
+export async function getURL(env: Env, slug: string): Promise<URLRecord | null> {
   const key = `urls:${slug}`;
   const data = await env.URLS_KV.get(key);
   if (!data) return null;
@@ -30,7 +30,7 @@ async function getURL(env: Env, slug: string): Promise<URLRecord | null> {
 /**
  * Update an existing URL record
  */
-async function updateURL(env: Env, slug: string, updates: Partial<URLRecord>): Promise<void> {
+export async function updateURL(env: Env, slug: string, updates: Partial<URLRecord>): Promise<void> {
   const existing = await getURL(env, slug);
   if (!existing) {
     throw new Error('URL not found');
@@ -49,7 +49,7 @@ async function updateURL(env: Env, slug: string, updates: Partial<URLRecord>): P
 /**
  * Delete a URL record from KV storage
  */
-async function deleteURL(env: Env, slug: string): Promise<void> {
+export async function deleteURL(env: Env, slug: string): Promise<void> {
   const key = `urls:${slug}`;
   await env.URLS_KV.delete(key);
 }
@@ -57,7 +57,7 @@ async function deleteURL(env: Env, slug: string): Promise<void> {
 /**
  * List all URL records from KV storage
  */
-async function listAllURLs(env: Env): Promise<URLRecord[]> {
+export async function listAllURLs(env: Env): Promise<URLRecord[]> {
   const urls: URLRecord[] = [];
   const list = await env.URLS_KV.list({ prefix: 'urls:' });
   
@@ -96,7 +96,7 @@ function generateSlug(): string {
 /**
  * Generate a unique slug, checking for collisions
  */
-async function generateUniqueSlug(env: Env): Promise<string> {
+export async function generateUniqueSlug(env: Env): Promise<string> {
   let attempts = 0;
   const maxAttempts = 10;
   
@@ -118,7 +118,7 @@ async function generateUniqueSlug(env: Env): Promise<string> {
 /**
  * Validate a custom slug
  */
-function isValidCustomSlug(slug: string): boolean {
+export function isValidCustomSlug(slug: string): boolean {
   // Must be 3-50 chars, alphanumeric with hyphens (no spaces or special chars)
   const slugRegex = /^[a-z0-9-]{3,50}$/;
   
@@ -146,7 +146,7 @@ function isValidCustomSlug(slug: string): boolean {
 /**
  * Validate URL format
  */
-function isValidURL(url: string): boolean {
+export function isValidURL(url: string): boolean {
   try {
     const parsed = new URL(url);
     // Only allow http and https protocols
@@ -159,7 +159,7 @@ function isValidURL(url: string): boolean {
 /**
  * Check if URL is potentially dangerous
  */
-function isDangerousURL(url: string): boolean {
+export function isDangerousURL(url: string): boolean {
   try {
     const parsed = new URL(url);
     
@@ -200,7 +200,7 @@ function isDangerousURL(url: string): boolean {
 /**
  * Normalize URL (add protocol if missing, trim whitespace)
  */
-function normalizeURL(url: string): string {
+export function normalizeURL(url: string): string {
   url = url.trim();
   
   // Add https:// if no protocol specified
@@ -222,7 +222,7 @@ function normalizeURL(url: string): string {
 /**
  * Check rate limit using KV storage
  */
-async function checkRateLimit(env: Env, key: string, limit: number, window: number): Promise<boolean> {
+export async function checkRateLimit(env: Env, key: string, limit: number, window: number): Promise<boolean> {
   const rateLimitKey = `rate:${key}`;
   const now = Date.now();
   const windowStart = now - window;
@@ -261,7 +261,7 @@ async function checkRateLimit(env: Env, key: string, limit: number, window: numb
 /**
  * Fetch page metadata with timeout
  */
-async function fetchPageMetadata(url: string, timeout: number = 5000): Promise<{
+export async function fetchPageMetadata(url: string, timeout: number = 5000): Promise<{
   title?: string;
   description?: string;
   image?: string;
@@ -392,7 +392,7 @@ function generateOGHTML(record: URLRecord): string {
 /**
  * Escape HTML special characters
  */
-function escapeHTML(str: string): string {
+export function escapeHTML(str: string): string {
   const map: { [key: string]: string } = {
     '&': '&amp;',
     '<': '&lt;',
