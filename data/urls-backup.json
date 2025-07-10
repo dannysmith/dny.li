@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "url": "https://google.com/",
+    "slug": "google",
+    "created": "2025-07-10T22:54:45.437Z",
+    "updated": "2025-07-10T22:54:45.437Z",
+    "metadata": {}
+  }
+]
