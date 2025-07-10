@@ -349,63 +349,6 @@ export async function handleDeleteURL(request: Request, env: Env): Promise<Respo
   }
 }
 
-/**
- * Handle GET /admin/urls - List all URLs (public, no auth)
- */
-export async function handleListURLs(request: Request, env: Env): Promise<Response> {
-  try {
-    const urls = await listAllURLs(env);
-    
-    // Transform URLs to include short URL
-    const transformedUrls = urls.map(record => ({
-      ...record,
-      shortUrl: `https://${env.DOMAIN}/${record.slug}`
-    }));
-    
-    return new Response(JSON.stringify({
-      success: true,
-      count: urls.length,
-      data: transformedUrls
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60' // Cache for 1 minute
-      }
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-}
-
-/**
- * Handle GET /admin/backup - Export all URLs as JSON
- */
-export async function handleBackup(env: Env): Promise<Response> {
-  try {
-    const urls = await listAllURLs(env);
-    
-    return new Response(JSON.stringify({
-      exportDate: new Date().toISOString(),
-      count: urls.length,
-      urls
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Content-Disposition': 'attachment; filename="urls-backup.json"'
-      }
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-}
 
 // ========== HTML Templates ==========
 
@@ -569,8 +512,7 @@ export function renderAdminPage(urls: URLRecord[], message?: { type: 'success' |
                 <li><code>POST /admin/urls</code> - Create new URL</li>
                 <li><code>PUT /admin/urls/{slug}</code> - Update URL</li>
                 <li><code>DELETE /admin/urls/{slug}</code> - Delete URL</li>
-                <li><code>GET /admin/urls</code> - List all URLs (public)</li>
-                <li><code>GET /admin/backup</code> - Export backup</li>
+                <li><code>GET /all.json</code> - List all URLs (public)</li>
             </ul>
         </section>
     </main>
@@ -800,7 +742,7 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
   }
   
   // For API endpoints, check both cookie and API key authentication
-  if (path.startsWith('/admin/urls') || path === '/admin/backup') {
+  if (path.startsWith('/admin/urls')) {
     const cookieAuth = await isAuthenticated(request, env);
     const apiKeyAuth = authenticateAPIKey(request, env);
     
@@ -824,7 +766,7 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
   }
   
   // API endpoints
-  if (path.startsWith('/admin/urls') || path === '/admin/backup') {
+  if (path.startsWith('/admin/urls')) {
     // Check rate limiting for admin operations (50 requests per 15 minutes)
     const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
     const rateLimitKey = `admin:${clientIP}`;
@@ -846,8 +788,6 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
       return handleUpdateURL(request, env);
     } else if (method === 'DELETE' && path.startsWith('/admin/urls/')) {
       return handleDeleteURL(request, env);
-    } else if (method === 'GET' && path === '/admin/backup') {
-      return handleBackup(env);
     }
   }
   

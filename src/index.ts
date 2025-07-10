@@ -459,6 +459,17 @@ export default {
       return new Response('OK', { status: 200 })
     }
 
+    // Public JSON endpoint for all URLs
+    if (path === '/all.json') {
+      const urls = await listAllURLs(env)
+      return new Response(JSON.stringify(urls, null, 2), {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+        }
+      })
+    }
+
     // Handle admin routes
     if (path.startsWith('/admin') || path.startsWith('/api')) {
       return handleAdminRequest(request, env)

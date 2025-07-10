@@ -68,8 +68,7 @@ The service runs at `http://localhost:8787` with these endpoints:
 - `POST /admin/urls` - Create URL
 - `PUT /admin/urls/{slug}` - Update URL  
 - `DELETE /admin/urls/{slug}` - Delete URL
-- `GET /admin/urls` - List all URLs (public)
-- `GET /admin/backup` - Export backup JSON
+- `GET /all.json` - List all URLs (public)
 
 ## Deployment
 
@@ -81,7 +80,7 @@ The service runs at `http://localhost:8787` with these endpoints:
 2. Configure custom domain in Cloudflare Workers dashboard
 
 3. Set up GitHub secrets for backups:
-   - `BACKUP_ENDPOINT`: Your worker URL + `/admin/backup`
+   - `WORKER_URL`: Your worker URL (e.g., `https://s.danny.is`)
 
 ## Manual Setup Required
 
@@ -90,6 +89,6 @@ After deploying the code, you'll need to:
 1. **Create KV namespace** in Cloudflare dashboard
 2. **Set API_SECRET** environment variable
 3. **Configure custom domain** (s.danny.is)
-4. **Set GitHub secret** for BACKUP_ENDPOINT
+4. **Set GitHub secret** for WORKER_URL
 
 All free tier compatible - no ongoing costs!

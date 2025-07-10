@@ -16,7 +16,7 @@ jobs:
 
       - name: Backup URLs from Cloudflare Worker
         run: |
-          curl -s "${{ secrets.BACKUP_ENDPOINT }}" > data/urls-backup.json
+          curl -s "${{ secrets.WORKER_URL }}/all.json" > data/urls-backup.json
           
       - name: Check if backup was successful
         run: |
