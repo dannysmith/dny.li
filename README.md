@@ -1,6 +1,6 @@
 # URL Shortener Service
 
-A fast, secure URL shortener built with Cloudflare Workers that redirects `s.danny.is/<slug>` to target URLs.
+A fast, secure URL shortener built with Cloudflare Workers that redirects `s-danny-is.hi-7f5.workers.dev/<slug>` to target URLs.
 
 ## Features
 
@@ -77,10 +77,8 @@ The service runs at `http://localhost:8787` with these endpoints:
    npm run deploy
    ```
 
-2. Configure custom domain in Cloudflare Workers dashboard
-
-3. Set up GitHub secrets for backups:
-   - `WORKER_URL`: Your worker URL (e.g., `https://s.danny.is`)
+2. Set up GitHub secrets for backups:
+   - `WORKER_URL`: Your worker URL (e.g., `https://s-danny-is.hi-7f5.workers.dev`)
 
 ## Manual Setup Required
 
@@ -88,7 +86,6 @@ After deploying the code, you'll need to:
 
 1. **Create KV namespace** in Cloudflare dashboard
 2. **Set API_SECRET** environment variable
-3. **Configure custom domain** (s.danny.is)
-4. **Set GitHub secret** for WORKER_URL
+3. **Set GitHub secret** for WORKER_URL
 
 All free tier compatible - no ongoing costs!

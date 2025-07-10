@@ -3,15 +3,15 @@ main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
 [vars]
-DOMAIN = "s.danny.is"
-API_SECRET = "dev-secret-123"
+DOMAIN = "s-danny-is.hi-7f5.workers.dev"
+# API_SECRET = "dev-secret-123"  # For development only - use wrangler secret put API_SECRET for production
 
 [[kv_namespaces]]
 binding = "URLS_KV"
-preview_id = "preview-kv-id"
-id = "production-kv-id"
+preview_id = "3176486d69994df5a5cb97cce14bb704"
+id = "eaef839073424c4db47c1a38d0598b28"
 
 [env.production]
 [[env.production.kv_namespaces]]
 binding = "URLS_KV"
-id = "production-kv-id"
+id = "eaef839073424c4db47c1a38d0598b28"
