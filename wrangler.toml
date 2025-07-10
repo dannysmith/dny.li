@@ -1,0 +1,16 @@
+name = "s-danny-is"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+DOMAIN = "s.danny.is"
+
+[[kv_namespaces]]
+binding = "URLS_KV"
+preview_id = "preview-kv-id"
+id = "production-kv-id"
+
+[env.production]
+[[env.production.kv_namespaces]]
+binding = "URLS_KV"
+id = "production-kv-id"

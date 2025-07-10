@@ -1,0 +1,40 @@
+name: Backup URLs
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Backup URLs from Cloudflare Worker
+        run: |
+          curl -s "${{ secrets.BACKUP_ENDPOINT }}" > data/urls-backup.json
+          
+      - name: Check if backup was successful
+        run: |
+          if [ ! -s data/urls-backup.json ]; then
+            echo "Backup file is empty or missing"
+            exit 1
+          fi
+          echo "Backup successful - $(cat data/urls-backup.json | jq length) URLs backed up"
+
+      - name: Commit and push backup
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Backup Bot"
+          git add data/urls-backup.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Automated URL backup - $(date '+%Y-%m-%d %H:%M:%S UTC')"
+            git push
+            echo "Backup committed and pushed successfully"
+          fi
