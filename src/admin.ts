@@ -30,6 +30,91 @@ export function authenticateAPIKey(request: Request, env: Env): boolean {
   return parts[1] === env.API_SECRET;
 }
 
+/**
+ * Sign a session cookie value using HMAC-SHA256
+ */
+async function signSessionCookie(timestamp: number, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(timestamp.toString());
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', key, data);
+  const signatureArray = new Uint8Array(signature);
+  const signatureHex = Array.from(signatureArray)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  
+  return `${timestamp}.${signatureHex}`;
+}
+
+/**
+ * Verify a session cookie and return the timestamp if valid
+ */
+async function verifySessionCookie(cookieValue: string, secret: string): Promise<number | null> {
+  try {
+    const parts = cookieValue.split('.');
+    if (parts.length !== 2) return null;
+    
+    const timestamp = parseInt(parts[0]);
+    const providedSignature = parts[1];
+    
+    if (isNaN(timestamp)) return null;
+    
+    // Check if session is expired (7 days = 7 * 24 * 60 * 60 * 1000 ms)
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    if (Date.now() - timestamp > sevenDaysMs) return null;
+    
+    // Verify signature
+    const expectedCookie = await signSessionCookie(timestamp, secret);
+    const expectedSignature = expectedCookie.split('.')[1];
+    
+    // Constant-time comparison to prevent timing attacks
+    if (providedSignature.length !== expectedSignature.length) return null;
+    
+    let result = 0;
+    for (let i = 0; i < providedSignature.length; i++) {
+      result |= providedSignature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
+    }
+    
+    return result === 0 ? timestamp : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if user is authenticated via session cookie
+ */
+async function isAuthenticated(request: Request, env: Env): Promise<boolean> {
+  if (!env.API_SECRET) return true; // No auth required if no secret set (dev mode)
+  
+  const cookies = request.headers.get('Cookie');
+  if (!cookies) return false;
+  
+  const sessionMatch = cookies.match(/session=([^;]+)/);
+  if (!sessionMatch) return false;
+  
+  const timestamp = await verifySessionCookie(sessionMatch[1], env.API_SECRET);
+  return timestamp !== null;
+}
+
+/**
+ * Create a new session cookie
+ */
+async function createSessionCookie(env: Env, isSecure: boolean = true): Promise<string> {
+  const timestamp = Date.now();
+  const cookieValue = await signSessionCookie(timestamp, env.API_SECRET);
+  
+  const secureFlag = isSecure ? '; Secure' : '';
+  return `session=${cookieValue}; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=${7 * 24 * 60 * 60}; Path=/`;
+}
+
 // ========== API Endpoints ==========
 
 /**
@@ -344,6 +429,27 @@ export function renderAdminPage(urls: URLRecord[], message?: { type: 'success' |
             background: var(--del-color);
             color: var(--contrast);
         }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .logout-form {
+            margin: 0;
+        }
+        .logout-form button {
+            background: var(--secondary);
+            color: var(--secondary-inverse);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        .logout-form button:hover {
+            background: var(--secondary-hover);
+        }
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -370,7 +476,12 @@ export function renderAdminPage(urls: URLRecord[], message?: { type: 'success' |
 </head>
 <body>
     <main class="container">
-        <h1>URL Shortener Admin</h1>
+        <div class="header">
+            <h1>URL Shortener Admin</h1>
+            <form method="post" action="/admin/logout" class="logout-form">
+                <button type="submit">Logout</button>
+            </form>
+        </div>
         
         ${message ? `
         <div class="message ${message.type}">
@@ -511,6 +622,143 @@ export function renderEditForm(record: URLRecord, domain: string): string {
 </html>`;
 }
 
+/**
+ * Render login form
+ */
+export function renderLoginForm(message?: { type: 'success' | 'error'; text: string }): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - URL Shortener</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.5.10/css/pico.min.css">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 10vh auto;
+        }
+        .login-form {
+            background: var(--card-background-color);
+            border: 1px solid var(--card-border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+        }
+        .message {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+        .message.success {
+            background: var(--ins-color);
+            color: var(--contrast);
+        }
+        .message.error {
+            background: var(--del-color);
+            color: var(--contrast);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form">
+            <h1>Admin Login</h1>
+            
+            ${message ? `<div class="message ${message.type}">${escapeHTML(message.text)}</div>` : ''}
+            
+            <form method="post" action="/admin/login">
+                <label for="password">
+                    Admin Password
+                    <input type="password" id="password" name="password" required autofocus>
+                </label>
+                
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+// ========== Auth Handlers ==========
+
+/**
+ * Handle login and logout routes
+ */
+async function handleAuthRoutes(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const path = url.pathname;
+  const method = request.method;
+  
+  // Login page
+  if (path === '/admin/login' && method === 'GET') {
+    return new Response(renderLoginForm(), {
+      headers: { 'Content-Type': 'text/html' }
+    });
+  }
+  
+  // Login form submission
+  if (path === '/admin/login' && method === 'POST') {
+    try {
+      const formData = await request.formData();
+      const password = formData.get('password') as string;
+      
+      if (!password) {
+        return new Response(renderLoginForm({ type: 'error', text: 'Password is required' }), {
+          headers: { 'Content-Type': 'text/html' }
+        });
+      }
+      
+      // Check password against API_SECRET
+      if (!env.API_SECRET) {
+        return new Response(renderLoginForm({ type: 'error', text: 'Admin authentication not configured' }), {
+          headers: { 'Content-Type': 'text/html' }
+        });
+      }
+      
+      if (password !== env.API_SECRET) {
+        console.log('Login failed: password mismatch', { provided: password, expected: env.API_SECRET });
+        return new Response(renderLoginForm({ type: 'error', text: 'Invalid password' }), {
+          headers: { 'Content-Type': 'text/html' }
+        });
+      }
+      
+      console.log('Login successful, creating session cookie');
+      
+      // Create session cookie and redirect to admin
+      const isSecure = new URL(request.url).protocol === 'https:';
+      const sessionCookie = await createSessionCookie(env, isSecure);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': new URL('/admin', request.url).toString(),
+          'Set-Cookie': sessionCookie
+        }
+      });
+      
+    } catch (error) {
+      return new Response(renderLoginForm({ type: 'error', text: 'Login failed' }), {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
+  }
+  
+  // Logout
+  if (path === '/admin/logout' && method === 'POST') {
+    const isSecure = new URL(request.url).protocol === 'https:';
+    const secureFlag = isSecure ? '; Secure' : '';
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Location': new URL('/admin/login', request.url).toString(),
+        'Set-Cookie': `session=; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=0; Path=/`
+      }
+    });
+  }
+  
+  return new Response('Not found', { status: 404 });
+}
+
 // ========== Main Admin Handler ==========
 
 /**
@@ -520,6 +768,25 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
+  
+  // Allow login/logout routes without authentication
+  if (path === '/admin/login' || path === '/admin/logout') {
+    return await handleAuthRoutes(request, env);
+  }
+  
+  // Check authentication for all other admin routes
+  const authenticated = await isAuthenticated(request, env);
+  if (!authenticated) {
+    // Redirect to login page for HTML requests
+    if (method === 'GET' && !path.startsWith('/admin/urls')) {
+      return Response.redirect(new URL('/admin/login', request.url).toString(), 302);
+    }
+    // Return JSON error for API requests
+    return new Response(JSON.stringify({ error: 'Unauthorized - please login' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
   
   // API endpoints
   if (path.startsWith('/admin/urls') || path === '/admin/backup') {
