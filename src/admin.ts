@@ -430,7 +430,7 @@ export function renderAdminPage(
         .url-info strong { font-size: 1.1rem; }
         .url-info a { font-family: monospace; font-size: 0.9rem; color: var(--pico-muted-color); }
         .url-actions { display: flex; gap: 0.25rem; align-items: center; }
-        .url-actions button, .url-actions a, .url-actions form { margin-bottom: 0; }
+        .url-actions > * { margin-bottom: 0; }
         .url-actions button, .url-actions a { --pico-font-size: 0.8rem; padding: 0.4rem; white-space: nowrap; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; }
         .icon-btn { background: transparent !important; border: none !important; padding: 0.4rem !important; }
         .icon-btn:hover { background: var(--pico-secondary-background) !important; }
@@ -586,70 +586,48 @@ export function renderCreateForm(): string {
  */
 export function renderEditForm(record: URLRecord, domain: string): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit URL - URL Shortener Admin</title>
     <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.5.10/css/pico.min.css">
+    <style>
+        :root { --pico-font-size: 90%; }
+        body { position: relative; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding-top: 2rem; }
+        .container { max-width: 800px; }
+        .grid a[role="button"] { align-self: end; }
+    </style>
 </head>
 <body>
     <main class="container">
-        <h1>Edit Short URL</h1>
+        <h2>Edit Short URL</h2>
 
         <article>
-            <p><strong>Slug:</strong> /${escapeHTML(
-              record.slug
-            )} (cannot be changed)</p>
-            <p><strong>Short URL:</strong> <code>https://${escapeHTML(
-              domain
-            )}/${escapeHTML(record.slug)}</code></p>
+            <p>
+                <strong>Slug:</strong> /${escapeHTML(record.slug)} (cannot be changed)<br>
+                <strong>Short URL:</strong> <code>https://${escapeHTML(domain)}/${escapeHTML(record.slug)}</code>
+            </p>
 
-            <form method="post" action="/admin/update/${escapeHTML(
-              record.slug
-            )}">
+            <form method="post" action="/admin/update/${escapeHTML(record.slug)}">
                 <label for="url">
                     Destination URL
-                    <input type="url" id="url" name="url" value="${escapeHTML(
-                      record.url
-                    )}" required>
+                    <input type="url" id="url" name="url" value="${escapeHTML(record.url)}" required>
                 </label>
 
-                ${
-                  record.metadata
-                    ? `
+                ${record.metadata ? `
                     <fieldset>
                         <legend>Current Metadata</legend>
-                        ${
-                          record.metadata.title
-                            ? `<p><strong>Title:</strong> ${escapeHTML(
-                                record.metadata.title
-                              )}</p>`
-                            : ''
-                        }
-                        ${
-                          record.metadata.description
-                            ? `<p><strong>Description:</strong> ${escapeHTML(
-                                record.metadata.description
-                              )}</p>`
-                            : ''
-                        }
-                        ${
-                          record.metadata.image
-                            ? `<p><strong>Image:</strong> <a href="${escapeHTML(
-                                record.metadata.image
-                              )}" target="_blank">View</a></p>`
-                            : ''
-                        }
-                        <p><small>Metadata will be refreshed when URL is updated</small></p>
+                        ${record.metadata.title ? `<p><strong>Title:</strong> ${escapeHTML(record.metadata.title)}</p>` : ''}
+                        ${record.metadata.description ? `<p><strong>Description:</strong> ${escapeHTML(record.metadata.description)}</p>` : ''}
+                        ${record.metadata.image ? `<p><strong>Image:</strong> <a href="${escapeHTML(record.metadata.image)}" target="_blank">View</a></p>` : ''}
+                        <p><small>Metadata will be refreshed when the destination URL is updated.</small></p>
                     </fieldset>
-                `
-                    : ''
-                }
+                ` : ''}
 
                 <div class="grid">
                     <button type="submit">Update URL</button>
-                    <a href="/admin" role="button" class="secondary">Cancel</a>
+                    <a href="/admin" role="button" class="outline">Cancel</a>
                 </div>
             </form>
         </article>
