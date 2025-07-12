@@ -430,8 +430,9 @@ export function renderAdminPage(
         .url-info strong { font-size: 1.1rem; }
         .url-info a { font-family: monospace; font-size: 0.9rem; color: var(--pico-muted-color); }
         .url-actions { display: flex; gap: 0.25rem; align-items: center; }
-        .url-actions > * { margin-bottom: 0; }
-        .url-actions button, .url-actions a { --pico-font-size: 0.8rem; padding: 0.4rem; white-space: nowrap; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; }
+        .url-actions > * { margin: 0; }
+        .url-actions button, .url-actions a { --pico-font-size: 0.8rem; padding: 0.4rem; white-space: nowrap; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin: 0; }
+        .url-actions form { margin: 0; padding: 0; display: flex; align-items: center; }
         .icon-btn { background: transparent !important; border: none !important; padding: 0.4rem !important; }
         .icon-btn:hover { background: var(--pico-secondary-background) !important; }
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
@@ -596,7 +597,7 @@ export function renderEditForm(record: URLRecord, domain: string): string {
         :root { --pico-font-size: 90%; }
         body { position: relative; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding-top: 2rem; }
         .container { max-width: 800px; }
-        .grid a[role="button"] { align-self: end; }
+        .grid a[role="button"] { align-self: start; }
     </style>
 </head>
 <body>
@@ -886,7 +887,23 @@ export async function handleAdminRequest(
   // Main admin page
   if (method === 'GET' && path === '/admin') {
     const urls = await listAllURLs(env)
-    return new Response(renderAdminPage(urls, env.DOMAIN), {
+    
+    // Check for success/error messages in query params
+    let message: { type: 'success' | 'error'; text: string; newShortUrl?: string } | undefined
+    const successMsg = url.searchParams.get('success')
+    const errorMsg = url.searchParams.get('error')
+    const newShortUrl = url.searchParams.get('newShortUrl')
+    
+    if (successMsg) {
+      message = { type: 'success', text: successMsg }
+      if (newShortUrl) {
+        message.newShortUrl = newShortUrl
+      }
+    } else if (errorMsg) {
+      message = { type: 'error', text: errorMsg }
+    }
+    
+    return new Response(renderAdminPage(urls, env.DOMAIN, message), {
       headers: { 'Content-Type': 'text/html' },
     })
   }
@@ -928,21 +945,18 @@ export async function handleAdminRequest(
       const response = await handleCreateURL(apiRequest, env)
       const result = (await response.json()) as any
 
-      const urls = await listAllURLs(env)
-      const message = response.ok
-        ? {
-            type: 'success' as const,
-            text: `Created short URL: /${result.data?.slug || ''}`,
-            newShortUrl: result.shortUrl,
-          }
-        : {
-            type: 'error' as const,
-            text: result.error || 'Failed to create URL',
-          }
+      // Redirect back to /admin with message in query params
+      const adminUrl = new URL('/admin', request.url)
+      if (response.ok) {
+        adminUrl.searchParams.set('success', `Created short URL: /${result.data?.slug || ''}`)
+        if (result.shortUrl) {
+          adminUrl.searchParams.set('newShortUrl', result.shortUrl)
+        }
+      } else {
+        adminUrl.searchParams.set('error', result.error || 'Failed to create URL')
+      }
 
-      return new Response(renderAdminPage(urls, env.DOMAIN, message), {
-        headers: { 'Content-Type': 'text/html' },
-      })
+      return Response.redirect(adminUrl.toString(), 302)
     }
 
     // Update URL
@@ -966,17 +980,15 @@ export async function handleAdminRequest(
       const response = await handleUpdateURL(apiRequest, env)
       const result = (await response.json()) as any
 
-      const urls = await listAllURLs(env)
-      const message = response.ok
-        ? { type: 'success' as const, text: `Updated URL: /${slug}` }
-        : {
-            type: 'error' as const,
-            text: result.error || 'Failed to update URL',
-          }
+      // Redirect back to /admin with message in query params
+      const adminUrl = new URL('/admin', request.url)
+      if (response.ok) {
+        adminUrl.searchParams.set('success', `Updated URL: /${slug}`)
+      } else {
+        adminUrl.searchParams.set('error', result.error || 'Failed to update URL')
+      }
 
-      return new Response(renderAdminPage(urls, env.DOMAIN, message), {
-        headers: { 'Content-Type': 'text/html' },
-      })
+      return Response.redirect(adminUrl.toString(), 302)
     }
 
     // Delete URL
@@ -997,17 +1009,15 @@ export async function handleAdminRequest(
       const response = await handleDeleteURL(apiRequest, env)
       const result = (await response.json()) as any
 
-      const urls = await listAllURLs(env)
-      const message = response.ok
-        ? { type: 'success' as const, text: `Deleted URL: /${slug}` }
-        : {
-            type: 'error' as const,
-            text: result.error || 'Failed to delete URL',
-          }
+      // Redirect back to /admin with message in query params
+      const adminUrl = new URL('/admin', request.url)
+      if (response.ok) {
+        adminUrl.searchParams.set('success', `Deleted URL: /${slug}`)
+      } else {
+        adminUrl.searchParams.set('error', result.error || 'Failed to delete URL')
+      }
 
-      return new Response(renderAdminPage(urls, env.DOMAIN, message), {
-        headers: { 'Content-Type': 'text/html' },
-      })
+      return Response.redirect(adminUrl.toString(), 302)
     }
   }
 
