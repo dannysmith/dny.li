@@ -6,17 +6,12 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 });
 
-// Optional: Handle extension icon click explicitly
+// Handle extension icon click (optional - the side panel opens automatically)
 chrome.action.onClicked.addListener((tab) => {
   // The side panel will open automatically due to setPanelBehavior above
   // This handler is here in case we need custom logic in the future
 });
 
-// Handle messages from content scripts or side panel if needed
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Handle any messages from the side panel if needed
-  // Currently no messages are sent, but this is here for future extensibility
-});
 
 // Optional: Handle tab updates to refresh side panel content
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {

@@ -14,7 +14,9 @@
       "Bash(ls:*)",
       "Bash(npm run test:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebFetch(domain:developer.chrome.com)",
+      "WebFetch(domain:groups.google.com)"
     ],
     "deny": []
   }

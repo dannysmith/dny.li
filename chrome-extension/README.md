@@ -31,9 +31,10 @@ A Chrome extension that provides quick access to create short URLs using the dny
 2. Click the extension icon to open the side panel
 3. The current page URL will be auto-populated
 4. A suggested slug will be generated from the page title
-5. Edit the slug if desired (text is pre-selected for easy editing)
-6. Click "Create Short URL"
-7. The short URL is automatically copied to your clipboard
+5. Click anywhere in the sidebar to focus and select the slug text for editing
+6. Edit the slug if desired, or start typing to replace it
+7. Click "Create Short URL"
+8. The short URL is automatically copied to your clipboard
 
 ## Files
 

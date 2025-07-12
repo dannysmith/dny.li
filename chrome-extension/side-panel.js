@@ -12,6 +12,7 @@ let apiTokenInput, saveSettingsBtn, cancelSettingsBtn, searchInput, urlsList, st
 // State
 let apiToken = null;
 let allUrls = [];
+let hasClickedToFocus = false;
 
 // Initialize extension
 document.addEventListener('DOMContentLoaded', async () => {
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadExistingUrls();
   setupEventListeners();
 });
+
 
 function initializeElements() {
   urlInput = document.getElementById('url-input');
@@ -63,12 +65,10 @@ async function loadCurrentPageInfo() {
       const suggestedSlug = generateSlug(tab.title, tab.url);
       if (suggestedSlug) {
         slugInput.value = suggestedSlug;
-        // Select the text for easy editing
-        setTimeout(() => {
-          slugInput.select();
-          slugInput.focus();
-        }, 100);
       }
+      
+      // Reset the click-to-focus flag for new page
+      hasClickedToFocus = false;
     }
   } catch (error) {
     console.error('Error loading current page info:', error);
@@ -171,6 +171,30 @@ function setupEventListeners() {
   
   // Copy buttons (event delegation)
   urlsList.addEventListener('click', handleCopyClick);
+  
+  // Click anywhere to focus slug input (first time only)
+  document.addEventListener('click', handleFirstClickFocus);
+}
+
+function handleFirstClickFocus(e) {
+  // Only trigger on first click after panel opens
+  if (hasClickedToFocus) return;
+  
+  // Don't trigger if clicking on interactive elements
+  if (e.target.matches('button, input, a, label, [role="button"]') || 
+      e.target.closest('button, input, a, label, [role="button"]')) {
+    return;
+  }
+  
+  // Don't trigger if settings panel is open
+  if (!settingsPanel.classList.contains('hidden')) return;
+  
+  // Focus and select the slug input
+  if (slugInput && slugInput.value) {
+    slugInput.select();
+    slugInput.focus();
+    hasClickedToFocus = true;
+  }
 }
 
 async function handleCreateUrl(e) {
@@ -227,7 +251,11 @@ async function handleCreateUrl(e) {
       await loadExistingUrls();
       
       // Auto-populate current page again for next use
-      setTimeout(() => loadCurrentPageInfo(), 500);
+      setTimeout(() => {
+        loadCurrentPageInfo();
+        // Reset click flag so user can click to focus again
+        hasClickedToFocus = false;
+      }, 500);
       
     } else {
       showMessage(result.error || 'Failed to create short URL', 'error');
