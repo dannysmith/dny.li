@@ -354,7 +354,7 @@ export async function fetchPageMetadata(
 /**
  * Detect if the user agent is a social media crawler
  */
-function isSocialMediaCrawler(userAgent: string): boolean {
+export function isSocialMediaCrawler(userAgent: string): boolean {
   if (!userAgent) return false
 
   const crawlers = [
