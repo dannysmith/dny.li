@@ -1,137 +1,90 @@
-# URL Shortener Service
+# dny.li URL Shortener
 
-A fast URL shortener built with Cloudflare Workers that redirects `dny.li/<slug>` to target URLs.
+A fast URL shortener with Cloudflare Workers backend and Chrome extension frontend.
 
-## Features
+## What It Does
 
-- **Fast Global Redirects**: Sub-20ms responses via Cloudflare's edge network
-- **Social Media Support**: Serves rich preview metadata to social crawlers
-- **Admin Interface**: Clean web interface for URL management
-- **API Access**: REST API for programmatic URL management
-- **Auto Slugs**: Generates readable slugs like "brave-blue-elephant"
-- **Security**: Blocks dangerous URLs and implements rate limiting
-- **Backups**: Automated daily backups to GitHub
+- **Backend**: Cloudflare Worker that redirects `dny.li/<slug>` to target URLs
+- **Chrome Extension**: Side panel for creating short URLs from any webpage
+- **Admin Interface**: Web interface for managing URLs at `dny.li/admin`
 
-## Project Structure
+## Architecture
 
 ```
-├── src/
-│   ├── index.ts    # Main router and core logic
-│   ├── admin.ts    # Admin interface and API
-│   └── types.ts    # TypeScript interfaces
-├── tests/          # Test suite
-│   ├── unit.test.ts       # Core function tests
-│   ├── integration.test.ts # KV storage tests
-│   ├── api.test.ts        # API endpoint tests
-│   ├── admin-ui.test.ts   # Admin interface tests
-│   ├── public.test.ts     # Public route tests
-│   └── test-setup.ts      # Test configuration
-├── .github/workflows/
-│   └── backup.yml  # Automated backup workflow
-├── data/
-│   └── urls-backup.json  # Backup storage
-└── wrangler.toml   # Cloudflare configuration
+├── src/                   # Cloudflare Worker (backend)
+│   ├── index.ts          # Main router and redirect logic
+│   ├── admin.ts          # Admin interface and API endpoints
+│   └── types.ts          # TypeScript interfaces
+├── chrome-extension/      # Chrome extension (frontend)
+│   ├── manifest.json     # Extension config
+│   ├── side-panel.html   # Main UI
+│   ├── side-panel.js     # Logic and API calls
+│   └── background.js     # Service worker
+├── tests/                # Test suite
+├── data/                 # Backup storage
+└── .github/workflows/    # GitHub Actions
+    └── backup.yml        # Weekly backup workflow
 ```
+
+## How It Works
+
+1. **Cloudflare Worker** runs at `dny.li` handling:
+
+   - Redirects: `GET /slug` → target URL
+   - Admin UI: `GET /admin` → management interface
+   - API: `POST /admin/urls` → create URLs
+
+2. **Chrome Extension** provides:
+
+   - Side panel that auto-fills current page URL
+   - Smart slug generation from page titles
+   - One-click URL creation with clipboard copy
+   - Browse existing URLs
+
+3. **Data Storage**:
+   - URLs stored in Cloudflare KV (key-value store)
+   - Weekly backups to GitHub via automated workflow
 
 ## Development
 
-### Local Setup
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Configure Cloudflare (one-time setup):
-
-   ```bash
-   # Create KV namespaces
-   wrangler kv:namespace create "URLS_KV"
-   wrangler kv:namespace create "URLS_KV" --preview
-
-   # Update wrangler.toml with the returned IDs
-
-   # Set API secret
-   wrangler secret put API_SECRET
-   ```
-
-3. Configure environment variables (optional):
-
-   ```bash
-   # Copy example environment file
-   cp .env.example .env
-
-   # Edit .env to set your preferred domain for testing
-   # DOMAIN=localhost:8787 (default)
-   # API_SECRET=your-secret-key-here
-   ```
-
-4. Start development server:
-   ```bash
-   npm run dev
-   ```
-
-### Testing and Quality Checks
-
-Run the comprehensive test suite:
+### Worker Setup
 
 ```bash
-# Run all tests once
-npm test
+# Install dependencies
+npm install
 
-# Run tests in watch mode during development
-npm run test:watch
+# Set up KV namespaces (one-time)
+wrangler kv:namespace create "URLS_KV"
+wrangler kv:namespace create "URLS_KV" --preview
 
-# Run TypeScript type checking
-npm run typecheck
+# Set API secret
+wrangler secret put API_SECRET
+
+# Run locally
+npm run dev
 ```
 
-The test suite covers:
+### Chrome Extension Setup
 
-- Unit tests for core functions
-- API endpoint integration tests
-- Admin UI form submission tests
-- Public route functionality
-- Authentication and authorization
+1. Load unpacked extension from `chrome-extension/` folder
+2. Enter API token in settings (same as API_SECRET)
+3. Use from any webpage
 
-### Local Testing
+### Testing
 
-The service runs at `http://localhost:8787` with these endpoints:
-
-- `GET /` - Redirects to main site
-- `GET /{slug}` - Redirect to target URL
-- `GET /admin` - Admin interface (requires login)
-- `GET /admin/login` - Login page
-- `GET /health` - Health check
-- `GET /all.json` - Public JSON list of all URLs
-
-### API Endpoints
-
-**Authentication**: Include `Authorization: Bearer <API_SECRET>` header
-
-- `POST /admin/urls` - Create URL
-- `PUT /admin/urls/{slug}` - Update URL
-- `DELETE /admin/urls/{slug}` - Delete URL
-- `GET /all.json` - List all URLs (public)
+```bash
+npm test          # Run all tests
+npm run typecheck # Check TypeScript
+```
 
 ## Deployment
 
-1. Deploy to Cloudflare:
+```bash
+npm run deploy    # Deploy to Cloudflare
+```
 
-   ```bash
-   npm run deploy
-   ```
+## Required Setup
 
-2. Set up GitHub secrets for backups:
-   - `WORKER_URL`: Your worker URL (e.g., `https://dny.li`)
-
-## Manual Setup Required
-
-After deploying the code, you'll need to:
-
-1. **Create KV namespace** in Cloudflare dashboard
-2. **Set API_SECRET** environment variable
-3. **Set GitHub secret** for WORKER_URL
-
-All free tier compatible - no ongoing costs!
+- **Cloudflare KV namespace** for URL storage
+- **API_SECRET** environment variable
+- **GitHub secret** `WORKER_URL` for backups
