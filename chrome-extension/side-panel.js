@@ -102,13 +102,19 @@ function generateSlug(title, url) {
     .substring(0, 50); // Limit length
 }
 
-async function loadExistingUrls(showLoading = false) {
+async function loadExistingUrls(showLoading = false, bypassCache = false) {
   if (showLoading) {
     urlsList.innerHTML = '<div class="loading">Loading URLs...</div>';
   }
   
   try {
-    const response = await fetch(`${API_BASE}${API_ENDPOINTS.list}`);
+    // Add cache-busting parameter when needed
+    let url = `${API_BASE}${API_ENDPOINTS.list}`;
+    if (bypassCache) {
+      url += `?t=${Date.now()}`;
+    }
+    
+    const response = await fetch(url);
     if (response.ok) {
       allUrls = await response.json();
       updateStats();
@@ -182,7 +188,7 @@ function setupEventListeners() {
   urlsList.addEventListener('click', handleCopyClick);
   
   // Refresh button
-  refreshBtn.addEventListener('click', () => loadExistingUrls(true));
+  refreshBtn.addEventListener('click', () => loadExistingUrls(true, true));
   
   // Click anywhere to focus slug input (first time only)
   document.addEventListener('click', handleFirstClickFocus);
@@ -259,8 +265,8 @@ async function handleCreateUrl(e) {
       urlInput.value = '';
       slugInput.value = '';
       
-      // Reload URLs list to include the new URL
-      await loadExistingUrls();
+      // Reload URLs list to include the new URL (bypass cache)
+      await loadExistingUrls(false, true);
       
       // Auto-populate current page again for next use
       setTimeout(() => {
