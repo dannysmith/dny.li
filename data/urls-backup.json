@@ -1,0 +1,18 @@
+[
+  {
+    "url": "https://example.com/",
+    "slug": "example",
+    "created": "2025-07-12T13:37:28.377Z",
+    "updated": "2025-07-12T13:37:28.377Z",
+    "metadata": {
+      "title": "Example Domain"
+    }
+  },
+  {
+    "url": "https://google.com/",
+    "slug": "google",
+    "created": "2025-07-10T22:54:45.437Z",
+    "updated": "2025-07-10T22:54:45.437Z",
+    "metadata": {}
+  }
+]
