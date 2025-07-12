@@ -232,8 +232,14 @@ h1 {
   margin-bottom: 16px;
 }
 
+.search-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 #search-input {
-  width: 100%;
+  flex: 1;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -241,10 +247,24 @@ h1 {
   background: white;
 }
 
+#refresh-btn {
+  padding: 8px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: auto;
+  width: auto;
+}
+
+#refresh-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
 /* URLs List */
 .urls-list {
-  max-height: 300px;
-  overflow-y: auto;
+  /* Let the list expand naturally and scroll the whole panel */
 }
 
 .url-item {
@@ -312,21 +332,3 @@ h1 {
   display: none !important;
 }
 
-/* Scrollbar styling */
-.urls-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.urls-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.urls-list::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.urls-list::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}

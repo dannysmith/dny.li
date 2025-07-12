@@ -7,7 +7,7 @@ const API_ENDPOINTS = {
 
 // DOM Elements
 let urlInput, slugInput, createBtn, createForm, messageDiv, settingsBtn, settingsPanel, mainPanel;
-let apiTokenInput, saveSettingsBtn, cancelSettingsBtn, searchInput, urlsList, statsDiv, totalCountSpan;
+let apiTokenInput, saveSettingsBtn, cancelSettingsBtn, searchInput, urlsList, statsDiv, totalCountSpan, refreshBtn;
 
 // State
 let apiToken = null;
@@ -40,6 +40,7 @@ function initializeElements() {
   urlsList = document.getElementById('urls-list');
   statsDiv = document.getElementById('stats');
   totalCountSpan = document.getElementById('total-count');
+  refreshBtn = document.getElementById('refresh-btn');
 }
 
 async function loadSettings() {
@@ -101,13 +102,21 @@ function generateSlug(title, url) {
     .substring(0, 50); // Limit length
 }
 
-async function loadExistingUrls() {
+async function loadExistingUrls(showLoading = false) {
+  if (showLoading) {
+    urlsList.innerHTML = '<div class="loading">Loading URLs...</div>';
+  }
+  
   try {
     const response = await fetch(`${API_BASE}${API_ENDPOINTS.list}`);
     if (response.ok) {
       allUrls = await response.json();
       updateStats();
       renderUrlsList();
+      
+      if (showLoading) {
+        showMessage('URL list refreshed', 'success');
+      }
     } else {
       showMessage('Failed to load existing URLs', 'error');
     }
@@ -171,6 +180,9 @@ function setupEventListeners() {
   
   // Copy buttons (event delegation)
   urlsList.addEventListener('click', handleCopyClick);
+  
+  // Refresh button
+  refreshBtn.addEventListener('click', () => loadExistingUrls(true));
   
   // Click anywhere to focus slug input (first time only)
   document.addEventListener('click', handleFirstClickFocus);
@@ -247,7 +259,7 @@ async function handleCreateUrl(e) {
       urlInput.value = '';
       slugInput.value = '';
       
-      // Reload URLs list
+      // Reload URLs list to include the new URL
       await loadExistingUrls();
       
       // Auto-populate current page again for next use
