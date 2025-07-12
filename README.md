@@ -1,6 +1,6 @@
 # URL Shortener Service
 
-A fast, secure URL shortener built with Cloudflare Workers that redirects `dny-li.hi-7f5.workers.dev/<slug>` to target URLs.
+A fast URL shortener built with Cloudflare Workers that redirects `dny.li/<slug>` to target URLs.
 
 ## Features
 
@@ -57,10 +57,11 @@ A fast, secure URL shortener built with Cloudflare Workers that redirects `dny-l
    ```
 
 3. Configure environment variables (optional):
+
    ```bash
    # Copy example environment file
    cp .env.example .env
-   
+
    # Edit .env to set your preferred domain for testing
    # DOMAIN=localhost:8787 (default)
    # API_SECRET=your-secret-key-here
@@ -74,6 +75,7 @@ A fast, secure URL shortener built with Cloudflare Workers that redirects `dny-l
 ### Testing and Quality Checks
 
 Run the comprehensive test suite:
+
 ```bash
 # Run all tests once
 npm test
@@ -86,6 +88,7 @@ npm run typecheck
 ```
 
 The test suite covers:
+
 - Unit tests for core functions
 - API endpoint integration tests
 - Admin UI form submission tests
@@ -121,7 +124,7 @@ The service runs at `http://localhost:8787` with these endpoints:
    ```
 
 2. Set up GitHub secrets for backups:
-   - `WORKER_URL`: Your worker URL (e.g., `https://dny-li.hi-7f5.workers.dev`)
+   - `WORKER_URL`: Your worker URL (e.g., `https://dny.li`)
 
 ## Manual Setup Required
 

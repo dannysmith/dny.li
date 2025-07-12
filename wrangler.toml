@@ -3,7 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
 [vars]
-DOMAIN = "dny-li.hi-7f5.workers.dev"
+DOMAIN = "dny.li"
 # API_SECRET = "dev-secret-123"  # For development only - use wrangler secret put API_SECRET for production
 
 [[kv_namespaces]]
@@ -15,3 +15,7 @@ id = "eaef839073424c4db47c1a38d0598b28"
 [[env.production.kv_namespaces]]
 binding = "URLS_KV"
 id = "eaef839073424c4db47c1a38d0598b28"
+
+# wrangler.toml (wrangler v3.88.0^)
+[observability.logs]
+enabled = true
