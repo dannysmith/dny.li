@@ -4,7 +4,7 @@ compatibility_date = "2024-12-01"
 
 [vars]
 DOMAIN = "dny.li"
-# API_SECRET = "dev-secret-123"  # For development only - use wrangler secret put API_SECRET for production
+# Use wrangler secret put API_SECRET for production
 
 [[kv_namespaces]]
 binding = "URLS_KV"
