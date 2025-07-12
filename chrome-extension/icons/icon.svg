@@ -1,0 +1,17 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="128" height="128" rx="24" fill="#191919"/>
+  
+  <!-- Simplified link icon -->
+  <g transform="translate(64, 64)">
+    <!-- Chain link -->
+    <path d="M-16 0 L-24 0 C-32 0, -38 -6, -38 -14 C-38 -22, -32 -28, -24 -28 L-8 -28 C0 -28, 6 -22, 6 -14 C6 -10, 4.5 -6.5, 2 -4"
+          fill="none" stroke="#ff7369" stroke-width="8" stroke-linecap="round"/>
+    
+    <path d="M16 0 L24 0 C32 0, 38 6, 38 14 C38 22, 32 28, 24 28 L8 28 C0 28, -6 22, -6 14 C-6 10, -4.5 6.5, -2 4"
+          fill="none" stroke="#ff7369" stroke-width="8" stroke-linecap="round"/>
+    
+    <!-- Center diagonal -->
+    <line x1="-8" y1="-8" x2="8" y2="8" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>
