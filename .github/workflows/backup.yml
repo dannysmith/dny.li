@@ -2,8 +2,8 @@ name: Backup URLs
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
-  workflow_dispatch:      # Manual trigger
+    - cron: '0 2 * * *' # Daily at 2 AM UTC
+  workflow_dispatch: # Manual trigger
 
 jobs:
   backup:
@@ -16,8 +16,9 @@ jobs:
 
       - name: Backup URLs from Cloudflare Worker
         run: |
-          curl -s "${{ secrets.WORKER_URL }}/all.json" > data/urls-backup.json
-          
+          mkdir -p data
+          curl -s "https://dny.li/all.json" > data/urls-backup.json
+
       - name: Check if backup was successful
         run: |
           if [ ! -s data/urls-backup.json ]; then
