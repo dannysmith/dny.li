@@ -13,12 +13,12 @@
 ### Technical Improvements
 
 - [x] Redirect GET requests to `/` to `https://danny.is`
-- [ ] Write simple, FAST automated tests to check the functionality works. These must run reliably in a local environment and properly tear down any seed data or stuff they create afterwards:
-  - [ ] All API Endpoints
-  - [ ] All admin endpoints
-  - [ ] `/` and `/all.json`
-  - [ ] Any unit tests which seem important to check
-- [ ] Review all code to ensure it's as simple, modern, performant and robust as possible.
+- [x] Write simple, FAST automated tests to check the functionality works. These must run reliably in a local environment and properly tear down any seed data or stuff they create afterwards:
+  - [x] All API Endpoints
+  - [x] All admin endpoints
+  - [x] `/` and `/all.json`
+  - [x] Any unit tests which seem important to check
+- [x] Review all code to ensure it's as simple, modern, performant and robust as possible.
 
 ### Simple Chrome Extension
 

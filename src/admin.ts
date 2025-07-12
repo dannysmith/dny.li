@@ -14,6 +14,7 @@ import {
   listAllURLs,
   escapeHTML,
 } from './index'
+import { SESSION, TIMEOUTS } from './constants'
 
 // ========== Authentication ==========
 
@@ -22,19 +23,12 @@ import {
  */
 export function authenticateAPIKey(request: Request, env: Env): boolean {
   const authHeader = request.headers.get('Authorization')
-  console.log(
-    'API auth check - header:',
-    authHeader,
-    'expected:',
-    env.API_SECRET
-  )
   if (!authHeader) return false
 
   const parts = authHeader.split(' ')
   if (parts.length !== 2 || parts[0] !== 'Bearer') return false
 
   const isValid = parts[1] === env.API_SECRET
-  console.log('API auth result:', isValid, 'provided:', parts[1])
   return isValid
 }
 
@@ -80,8 +74,8 @@ async function verifySessionCookie(
 
     if (isNaN(timestamp)) return null
 
-    // Check if session is expired (7 days = 7 * 24 * 60 * 60 * 1000 ms)
-    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+    // Check if session is expired
+    const sevenDaysMs = SESSION.DURATION_MS
     if (Date.now() - timestamp > sevenDaysMs) return null
 
     // Verify signature
@@ -108,14 +102,11 @@ async function verifySessionCookie(
  */
 async function isAuthenticated(request: Request, env: Env): Promise<boolean> {
   if (!env.API_SECRET) {
-    console.log('No API_SECRET set, allowing access')
     return true // No auth required if no secret set (dev mode)
   }
 
   const cookies = request.headers.get('Cookie')
-  console.log('Checking authentication, cookies:', cookies)
   if (!cookies) {
-    console.log('No cookies found')
     return false
   }
 
@@ -130,14 +121,11 @@ async function isAuthenticated(request: Request, env: Env): Promise<boolean> {
     }
   }
 
-  console.log('Found url_shortener_session cookie value:', sessionValue)
   if (!sessionValue) {
-    console.log('No url_shortener_session cookie found')
     return false
   }
 
   const timestamp = await verifySessionCookie(sessionValue, env.API_SECRET)
-  console.log('Session verification result:', timestamp)
   return timestamp !== null
 }
 
@@ -153,7 +141,7 @@ async function createSessionCookie(
 
   const secureFlag = isSecure ? '; Secure' : ''
   return `url_shortener_session=${cookieValue}; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=${
-    7 * 24 * 60 * 60
+SESSION.DURATION_SECONDS
   }; Path=/`
 }
 
@@ -220,7 +208,7 @@ export async function handleCreateURL(
     }
 
     // Fetch metadata
-    const metadata = await fetchPageMetadata(normalizedURL, 5000)
+    const metadata = await fetchPageMetadata(normalizedURL, TIMEOUTS.METADATA_FETCH_MS)
 
     // Create URL record
     const record: URLRecord = {
@@ -312,7 +300,7 @@ export async function handleUpdateURL(
     // Fetch new metadata if URL changed
     let metadata = existing.metadata
     if (normalizedURL !== existing.url) {
-      metadata = await fetchPageMetadata(normalizedURL, 5000)
+      metadata = await fetchPageMetadata(normalizedURL, TIMEOUTS.METADATA_FETCH_MS)
     }
 
     // Update record
@@ -750,10 +738,7 @@ async function handleAuthRoutes(request: Request, env: Env): Promise<Response> {
       }
 
       if (password !== env.API_SECRET) {
-        console.log('Login failed: password mismatch', {
-          provided: password,
-          expected: env.API_SECRET,
-        })
+        // Password mismatch
         return new Response(
           renderLoginForm({ type: 'error', text: 'Invalid password' }),
           {
@@ -762,7 +747,7 @@ async function handleAuthRoutes(request: Request, env: Env): Promise<Response> {
         )
       }
 
-      console.log('Login successful, creating session cookie')
+      // Login successful
 
       // Create session cookie and redirect to admin
       const isSecure = new URL(request.url).protocol === 'https:'
@@ -860,7 +845,7 @@ export async function handleAdminRequest(
       env,
       rateLimitKey,
       50,
-      15 * 60 * 1000
+SESSION.CLEANUP_INTERVAL_MS
     )
 
     if (!isAllowed) {

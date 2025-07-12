@@ -7,6 +7,7 @@ import {
 } from 'unique-names-generator'
 import { Env, URLRecord, RateLimitInfo } from './types'
 import { handleAdminRequest } from './admin'
+import { RATE_LIMITS, CACHE, TIMEOUTS, SLUG } from './constants'
 
 // ========== KV Storage Functions ==========
 
@@ -125,7 +126,7 @@ export async function generateUniqueSlug(env: Env): Promise<string> {
   }
 
   // Fallback to adding a random number if too many collisions
-  return `${generateSlug()}-${Math.floor(Math.random() * 1000)}`
+  return `${generateSlug()}-${Math.floor(Math.random() * SLUG.RANDOM_SUFFIX_MAX)}`
 }
 
 /**
@@ -285,7 +286,7 @@ export async function checkRateLimit(
  */
 export async function fetchPageMetadata(
   url: string,
-  timeout: number = 5000
+  timeout: number = TIMEOUTS.METADATA_FETCH_MS
 ): Promise<{
   title?: string
   description?: string
@@ -465,7 +466,7 @@ export default {
       return new Response(JSON.stringify(urls, null, 2), {
         headers: { 
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+          'Cache-Control': `public, max-age=${CACHE.ALL_URLS_MAX_AGE}` // Cache for 5 minutes
         }
       })
     }
@@ -491,7 +492,7 @@ export default {
     // Rate limiting for redirects (60 requests per minute per IP)
     const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown'
     const rateLimitKey = `redirect:${clientIP}`
-    const isAllowed = await checkRateLimit(env, rateLimitKey, 60, 60000) // 60 req/min
+    const isAllowed = await checkRateLimit(env, rateLimitKey, RATE_LIMITS.REDIRECT_REQUESTS_PER_MINUTE, RATE_LIMITS.REDIRECT_WINDOW_MS)
 
     if (!isAllowed) {
       return new Response('Rate limit exceeded', { status: 429 })
