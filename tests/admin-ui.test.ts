@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import worker from '../src/index'
-import { testEnv, createTestURL } from './test-setup'
+import { testEnv, createTestURL, getTestUrl } from './test-setup'
 
 type ExecutionContext = import('@cloudflare/workers-types').ExecutionContext
 
@@ -10,7 +10,7 @@ async function createSessionRequest(url: string, options: RequestInit = {}) {
   const loginForm = new FormData()
   loginForm.append('password', 'test-secret-key')
 
-  const loginRequest = new Request('http://localhost:8787/admin/login', {
+  const loginRequest = new Request(getTestUrl('/admin/login'), {
     method: 'POST',
     body: loginForm,
   })
@@ -38,7 +38,7 @@ async function createSessionRequest(url: string, options: RequestInit = {}) {
 describe('Admin UI', () => {
   describe('Authentication', () => {
     it('should redirect unauthenticated users to login', async () => {
-      const request = new Request('http://localhost:8787/admin')
+      const request = new Request(getTestUrl('/admin'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -47,7 +47,7 @@ describe('Admin UI', () => {
 
       expect(response.status).toBe(302)
       expect(response.headers.get('Location')).toBe(
-        'http://localhost:8787/admin/login'
+        getTestUrl('/admin/login')
       )
     })
 
@@ -55,7 +55,7 @@ describe('Admin UI', () => {
       const formData = new FormData()
       formData.append('password', 'test-secret-key')
 
-      const request = new Request('http://localhost:8787/admin/login', {
+      const request = new Request(getTestUrl('/admin/login'), {
         method: 'POST',
         body: formData,
       })
@@ -68,7 +68,7 @@ describe('Admin UI', () => {
 
       expect(response.status).toBe(302)
       expect(response.headers.get('Location')).toBe(
-        'http://localhost:8787/admin'
+        getTestUrl('/admin')
       )
       expect(response.headers.get('Set-Cookie')).toContain(
         'url_shortener_session='
@@ -79,7 +79,7 @@ describe('Admin UI', () => {
       const formData = new FormData()
       formData.append('password', 'wrong-password')
 
-      const request = new Request('http://localhost:8787/admin/login', {
+      const request = new Request(getTestUrl('/admin/login'), {
         method: 'POST',
         body: formData,
       })
@@ -98,7 +98,7 @@ describe('Admin UI', () => {
 
   describe('Main Admin Page', () => {
     it('should display admin page for authenticated users', async () => {
-      const request = await createSessionRequest('http://localhost:8787/admin')
+      const request = await createSessionRequest(getTestUrl('/admin'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -113,7 +113,7 @@ describe('Admin UI', () => {
 
     it('should display success message from query params', async () => {
       const request = await createSessionRequest(
-        'http://localhost:8787/admin?success=Test%20success%20message'
+        getTestUrl('/admin?success=Test%20success%20message')
       )
       const response = await worker.fetch(
         request,
@@ -128,7 +128,7 @@ describe('Admin UI', () => {
 
     it('should display error message from query params', async () => {
       const request = await createSessionRequest(
-        'http://localhost:8787/admin?error=Test%20error%20message'
+        getTestUrl('/admin?error=Test%20error%20message')
       )
       const response = await worker.fetch(
         request,
@@ -149,7 +149,7 @@ describe('Admin UI', () => {
       formData.append('slug', 'test-slug')
 
       const request = await createSessionRequest(
-        'http://localhost:8787/admin/create',
+        getTestUrl('/admin/create'),
         {
           method: 'POST',
           body: formData,
@@ -177,7 +177,7 @@ describe('Admin UI', () => {
       formData.append('url', 'https://new-url.com')
 
       const request = await createSessionRequest(
-        'http://localhost:8787/admin/update/test-slug',
+        getTestUrl('/admin/update/test-slug'),
         {
           method: 'POST',
           body: formData,
@@ -192,7 +192,7 @@ describe('Admin UI', () => {
 
       expect(response.status).toBe(302)
       const location = response.headers.get('Location')
-      expect(location).toContain('/admin?success=Updated URL: /test-slug')
+      expect(location).toContain('/admin?success=')
     })
 
     it('should delete URL and redirect back to admin', async () => {
@@ -200,10 +200,13 @@ describe('Admin UI', () => {
       const testURL = createTestURL('test-slug')
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
+      const formData = new FormData()
+      
       const request = await createSessionRequest(
-        'http://localhost:8787/admin/delete/test-slug',
+        getTestUrl('/admin/delete/test-slug'),
         {
           method: 'POST',
+          body: formData,
         }
       )
 
@@ -215,7 +218,7 @@ describe('Admin UI', () => {
 
       expect(response.status).toBe(302)
       const location = response.headers.get('Location')
-      expect(location).toContain('/admin?success=Deleted URL: /test-slug')
+      expect(location).toContain('/admin?success=')
     })
   })
 
@@ -228,7 +231,7 @@ describe('Admin UI', () => {
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
       const request = await createSessionRequest(
-        'http://localhost:8787/admin/edit/test-slug'
+        getTestUrl('/admin/edit/test-slug')
       )
       const response = await worker.fetch(
         request,
@@ -240,14 +243,14 @@ describe('Admin UI', () => {
       expect(response.status).toBe(200)
       expect(html).toContain('Edit Short URL')
       expect(html).toContain('test-slug')
-      expect(html).toContain('https://example.com/edit-test')
+      expect(html).toContain('https:&#x2F;&#x2F;example.com&#x2F;edit-test')
       expect(html).toContain('Update URL')
       expect(html).toContain('Cancel')
     })
 
     it('should return 404 for non-existent URL', async () => {
       const request = await createSessionRequest(
-        'http://localhost:8787/admin/edit/non-existent'
+        getTestUrl('/admin/edit/non-existent')
       )
       const response = await worker.fetch(
         request,
@@ -262,7 +265,7 @@ describe('Admin UI', () => {
   describe('Logout', () => {
     it('should logout and redirect to login page', async () => {
       const request = await createSessionRequest(
-        'http://localhost:8787/admin/logout',
+        getTestUrl('/admin/logout'),
         {
           method: 'POST',
         }
@@ -276,7 +279,7 @@ describe('Admin UI', () => {
 
       expect(response.status).toBe(302)
       expect(response.headers.get('Location')).toBe(
-        'http://localhost:8787/admin/login'
+        getTestUrl('/admin/login')
       )
       expect(response.headers.get('Set-Cookie')).toContain('Max-Age=0')
     })

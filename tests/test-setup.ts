@@ -1,19 +1,6 @@
 import { beforeEach, vi } from 'vitest'
 import { Env } from '../src/types'
 
-// Mock fetchPageMetadata to avoid network calls
-vi.mock('../src/index', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('../src/index')>()
-  return {
-    ...mod,
-    fetchPageMetadata: vi.fn().mockResolvedValue({
-      title: 'Test Page Title',
-      description: 'Test page description',
-      image: 'https://example.com/test-image.jpg'
-    })
-  }
-})
-
 // Mock KV store for testing
 class MockKVNamespace {
   private store = new Map<string, string>()
@@ -50,13 +37,24 @@ const mockKV = new MockKVNamespace()
 // Test environment setup
 export const testEnv: Env = {
   URLS_KV: mockKV as any,
-  API_SECRET: 'test-secret-key',
-  DOMAIN: 'localhost:8787'
+  API_SECRET: process.env.API_SECRET || 'test-secret-key',
+  DOMAIN: process.env.DOMAIN || 'localhost:8787'
 }
 
 // Helper function to clear test data
 export async function clearTestData() {
   (mockKV as any).clear()
+}
+
+// Helper to get base URL for tests
+export function getTestBaseUrl(): string {
+  return `https://${testEnv.DOMAIN}`
+}
+
+// Helper to construct test URLs
+export function getTestUrl(path: string = ''): string {
+  const baseUrl = getTestBaseUrl()
+  return path.startsWith('/') ? `${baseUrl}${path}` : `${baseUrl}/${path}`
 }
 
 // Helper function to create test URL record
@@ -79,7 +77,7 @@ export function createAuthenticatedRequest(url: string, options: RequestInit = {
   return new Request(url, {
     ...options,
     headers: {
-      'Authorization': 'Bearer test-secret-key',
+      'Authorization': `Bearer ${testEnv.API_SECRET}`,
       'Content-Type': 'application/json',
       ...options.headers
     }

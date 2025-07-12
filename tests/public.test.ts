@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import worker from '../src/index'
-import { testEnv, createTestURL } from './test-setup'
+import { testEnv, createTestURL, getTestUrl } from './test-setup'
 
 type ExecutionContext = import('@cloudflare/workers-types').ExecutionContext
 
 describe('Public Routes', () => {
   describe('Root redirect', () => {
     it('should redirect root to danny.is', async () => {
-      const request = new Request('http://localhost:8787/')
+      const request = new Request(getTestUrl('/'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -15,11 +15,11 @@ describe('Public Routes', () => {
       )
 
       expect(response.status).toBe(302)
-      expect(response.headers.get('Location')).toBe('https://danny.is')
+      expect(response.headers.get('Location')).toBe('https://danny.is/')
     })
 
     it('should redirect empty path to danny.is', async () => {
-      const request = new Request('http://localhost:8787')
+      const request = new Request(getTestUrl(''))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -27,13 +27,13 @@ describe('Public Routes', () => {
       )
 
       expect(response.status).toBe(302)
-      expect(response.headers.get('Location')).toBe('https://danny.is')
+      expect(response.headers.get('Location')).toBe('https://danny.is/')
     })
   })
 
   describe('All URLs JSON endpoint', () => {
     it('should return empty array when no URLs exist', async () => {
-      const request = new Request('http://localhost:8787/all.json')
+      const request = new Request(getTestUrl('/all.json'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -54,7 +54,7 @@ describe('Public Routes', () => {
       await testEnv.URLS_KV.put('urls:test-1', JSON.stringify(url1))
       await testEnv.URLS_KV.put('urls:test-2', JSON.stringify(url2))
 
-      const request = new Request('http://localhost:8787/all.json')
+      const request = new Request(getTestUrl('/all.json'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -70,7 +70,7 @@ describe('Public Routes', () => {
     })
 
     it('should have cache headers', async () => {
-      const request = new Request('http://localhost:8787/all.json')
+      const request = new Request(getTestUrl('/all.json'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -89,7 +89,7 @@ describe('Public Routes', () => {
       )
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
-      const request = new Request('http://localhost:8787/test-slug')
+      const request = new Request(getTestUrl('/test-slug'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -103,7 +103,7 @@ describe('Public Routes', () => {
     })
 
     it('should return 404 for non-existent slug', async () => {
-      const request = new Request('http://localhost:8787/non-existent')
+      const request = new Request(getTestUrl('/non-existent'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -120,7 +120,7 @@ describe('Public Routes', () => {
       )
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
-      const request = new Request('http://localhost:8787/TEST-SLUG')
+      const request = new Request(getTestUrl('/TEST-SLUG'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -140,7 +140,7 @@ describe('Public Routes', () => {
       )
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
-      const request = new Request('http://localhost:8787/test-slug', {
+      const request = new Request(getTestUrl('/test-slug'), {
         headers: { 'User-Agent': 'facebookexternalhit/1.1' },
       })
       const response = await worker.fetch(
@@ -151,17 +151,17 @@ describe('Public Routes', () => {
       const html = await response.text()
 
       expect(response.status).toBe(200)
-      expect(response.headers.get('Content-Type')).toBe('text/html')
+      expect(response.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
       expect(html).toContain('<meta property="og:title"')
       expect(html).toContain('Test Page Title')
       expect(html).toContain('<meta http-equiv="refresh"')
-      expect(html).toContain('https://example.com/destination')
+      expect(html).toContain('https:&#x2F;&#x2F;example.com&#x2F;destination')
     })
   })
 
   describe('Health check', () => {
     it('should respond to health check', async () => {
-      const request = new Request('http://localhost:8787/health')
+      const request = new Request(getTestUrl('/health'))
       const response = await worker.fetch(
         request,
         testEnv,
@@ -174,7 +174,7 @@ describe('Public Routes', () => {
     })
 
     it('should respond to status check', async () => {
-      const request = new Request('http://localhost:8787/status')
+      const request = new Request(getTestUrl('/status'))
       const response = await worker.fetch(
         request,
         testEnv,

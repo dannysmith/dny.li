@@ -6,9 +6,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "vitest --run tests/unit.test.ts tests/integration.test.ts",
-    "test:watch": "vitest --watch tests/unit.test.ts tests/integration.test.ts",
-    "test:all": "vitest --run"
+    "test": "vitest --run",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
     "unique-names-generator": "^4.7.1"
@@ -16,7 +15,6 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231218.0",
     "@types/node": "^20.10.0",
-    "miniflare": "^3.20240925.0",
     "typescript": "^5.3.0",
     "vitest": "^2.0.5",
     "wrangler": "^4.24.3"

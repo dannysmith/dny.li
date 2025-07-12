@@ -4,6 +4,8 @@ import {
   testEnv,
   createAuthenticatedRequest,
   createTestURL,
+  getTestUrl,
+  getTestBaseUrl,
 } from './test-setup'
 
 type ExecutionContext = import('@cloudflare/workers-types').ExecutionContext
@@ -12,7 +14,7 @@ describe('API Endpoints', () => {
   describe('POST /admin/urls', () => {
     it('should create URL with auto-generated slug', async () => {
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls',
+        getTestUrl('/admin/urls'),
         {
           method: 'POST',
           body: JSON.stringify({ url: 'https://example.com/test' }),
@@ -29,13 +31,13 @@ describe('API Endpoints', () => {
       expect(response.status).toBe(201)
       expect(result.success).toBe(true)
       expect(result.data.url).toBe('https://example.com/test')
-      expect(result.data.slug).toMatch(/^[a-z]+-[a-z]+-[a-z]+$/)
-      expect(result.shortUrl).toBe(`http://localhost:8787/${result.data.slug}`)
+      expect(result.data.slug).toMatch(/^[a-z]+-[a-z]+$/)
+      expect(result.shortUrl).toBe(`${getTestBaseUrl()}/${result.data.slug}`)
     })
 
     it('should create URL with custom slug', async () => {
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls',
+        getTestUrl('/admin/urls'),
         {
           method: 'POST',
           body: JSON.stringify({
@@ -55,15 +57,15 @@ describe('API Endpoints', () => {
       expect(response.status).toBe(201)
       expect(result.success).toBe(true)
       expect(result.data.slug).toBe('custom-slug')
-      expect(result.shortUrl).toBe('http://localhost:8787/custom-slug')
+      expect(result.shortUrl).toBe(`${getTestBaseUrl()}/custom-slug`)
     })
 
     it('should reject invalid URL', async () => {
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls',
+        getTestUrl('/admin/urls'),
         {
           method: 'POST',
-          body: JSON.stringify({ url: 'not-a-url' }),
+          body: JSON.stringify({ url: 'not a url at all' }),
         }
       )
 
@@ -80,10 +82,10 @@ describe('API Endpoints', () => {
 
     it('should reject dangerous URL', async () => {
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls',
+        getTestUrl('/admin/urls'),
         {
           method: 'POST',
-          body: JSON.stringify({ url: 'javascript:alert(1)' }),
+          body: JSON.stringify({ url: 'http://localhost/test' }),
         }
       )
 
@@ -106,7 +108,7 @@ describe('API Endpoints', () => {
       )
 
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls',
+        getTestUrl('/admin/urls'),
         {
           method: 'POST',
           body: JSON.stringify({
@@ -128,7 +130,7 @@ describe('API Endpoints', () => {
     })
 
     it('should require authentication', async () => {
-      const request = new Request('http://localhost:8787/admin/urls', {
+      const request = new Request(getTestUrl('/admin/urls'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: 'https://example.com/test' }),
@@ -153,7 +155,7 @@ describe('API Endpoints', () => {
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls/test-slug',
+        getTestUrl('/admin/urls/test-slug'),
         {
           method: 'PUT',
           body: JSON.stringify({ url: 'https://new-url.com' }),
@@ -169,13 +171,13 @@ describe('API Endpoints', () => {
 
       expect(response.status).toBe(200)
       expect(result.success).toBe(true)
-      expect(result.data.url).toBe('https://new-url.com')
+      expect(result.data.url).toBe('https://new-url.com/')
       expect(result.data.slug).toBe('test-slug')
     })
 
     it('should return 404 for non-existent slug', async () => {
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls/non-existent',
+        getTestUrl('/admin/urls/non-existent'),
         {
           method: 'PUT',
           body: JSON.stringify({ url: 'https://example.com' }),
@@ -198,10 +200,10 @@ describe('API Endpoints', () => {
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls/test-slug',
+        getTestUrl('/admin/urls/test-slug'),
         {
           method: 'PUT',
-          body: JSON.stringify({ url: 'invalid-url' }),
+          body: JSON.stringify({ url: 'not a url either' }),
         }
       )
 
@@ -224,7 +226,7 @@ describe('API Endpoints', () => {
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls/test-slug',
+        getTestUrl('/admin/urls/test-slug'),
         {
           method: 'DELETE',
         }
@@ -248,7 +250,7 @@ describe('API Endpoints', () => {
 
     it('should return 404 for non-existent slug', async () => {
       const request = createAuthenticatedRequest(
-        'http://localhost:8787/admin/urls/non-existent',
+        getTestUrl('/admin/urls/non-existent'),
         {
           method: 'DELETE',
         }

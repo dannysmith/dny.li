@@ -11,7 +11,7 @@ import {
   handleUpdateURL, 
   handleDeleteURL 
 } from '../src/admin'
-import { testEnv, clearTestData, createTestURL, createAuthenticatedRequest } from './test-setup'
+import { testEnv, clearTestData, createTestURL, createAuthenticatedRequest, getTestUrl } from './test-setup'
 
 beforeEach(async () => {
   await clearTestData()
@@ -72,7 +72,7 @@ describe('KV Storage Functions', () => {
 
 describe('Admin API Functions', () => {
   it('should create URL via handleCreateURL', async () => {
-    const request = createAuthenticatedRequest('http://localhost:8787/admin/urls', {
+    const request = createAuthenticatedRequest(getTestUrl('/admin/urls'), {
       method: 'POST',
       body: JSON.stringify({ url: 'https://example.com/test', slug: 'custom-slug' })
     })
@@ -95,7 +95,7 @@ describe('Admin API Functions', () => {
     const testURL = createTestURL('test-slug', 'https://old-url.com')
     await storeURL(testEnv, testURL)
     
-    const request = createAuthenticatedRequest('http://localhost:8787/admin/urls/test-slug', {
+    const request = createAuthenticatedRequest(getTestUrl('/admin/urls/test-slug'), {
       method: 'PUT',
       body: JSON.stringify({ url: 'https://new-url.com' })
     })
@@ -113,7 +113,7 @@ describe('Admin API Functions', () => {
     const testURL = createTestURL('test-slug')
     await storeURL(testEnv, testURL)
     
-    const request = createAuthenticatedRequest('http://localhost:8787/admin/urls/test-slug', {
+    const request = createAuthenticatedRequest(getTestUrl('/admin/urls/test-slug'), {
       method: 'DELETE'
     })
 
@@ -129,7 +129,7 @@ describe('Admin API Functions', () => {
   })
 
   it('should handle malformed requests', async () => {
-    const request = createAuthenticatedRequest('http://localhost:8787/admin/urls', {
+    const request = createAuthenticatedRequest(getTestUrl('/admin/urls'), {
       method: 'POST',
       body: JSON.stringify({ url: 'http://localhost/test' }) // Dangerous URL (localhost)
     })
