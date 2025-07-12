@@ -4,7 +4,7 @@
 
 Years ago I used to use a menubar app called CloudApp to quickly take a URL and shorten it to https://c.danny.is/some-url. I would like to have similar functionality now, but using a cheaper service which I own entirely.
 
-I need a URL shortnener which will redirect https://s.danny.is/<slug> to the URL as fast as possible.
+I need a URL shortnener which will redirect https://dny.li/<slug> to the URL as fast as possible.
 
 ## Core Functionality
 
