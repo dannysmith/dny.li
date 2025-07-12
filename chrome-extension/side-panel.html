@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dny.li URL Shortener</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>dny.li</h1>
+      <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+    </header>
+
+    <div id="settings-panel" class="settings-panel hidden">
+      <h3>Settings</h3>
+      <label for="api-token">API Token:</label>
+      <input type="password" id="api-token" placeholder="Enter your API token">
+      <div class="settings-actions">
+        <button id="save-settings">Save</button>
+        <button id="cancel-settings">Cancel</button>
+      </div>
+    </div>
+
+    <div id="main-panel">
+      <form id="create-form" class="create-form">
+        <div class="form-group">
+          <label for="url-input">URL to shorten:</label>
+          <input type="url" id="url-input" placeholder="https://example.com/my-long-url" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="slug-input">Custom slug (optional):</label>
+          <input type="text" id="slug-input" placeholder="custom-slug" pattern="[a-z0-9-]{3,50}">
+        </div>
+        
+        <button type="submit" id="create-btn">Create Short URL</button>
+      </form>
+
+      <div id="message" class="message hidden"></div>
+
+      <div class="stats" id="stats">
+        <div class="stat">
+          <span class="stat-value" id="total-count">-</span>
+          <span class="stat-label">Total URLs</span>
+        </div>
+      </div>
+
+      <div class="search-section">
+        <input type="search" id="search-input" placeholder="Search by slug or URL...">
+      </div>
+
+      <div id="urls-list" class="urls-list">
+        <div class="loading">Loading URLs...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="side-panel.js"></script>
+</body>
+</html>
