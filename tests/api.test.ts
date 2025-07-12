@@ -1,16 +1,29 @@
 import { describe, it, expect } from 'vitest'
 import worker from '../src/index'
-import { testEnv, createAuthenticatedRequest, createTestURL } from './test-setup'
+import {
+  testEnv,
+  createAuthenticatedRequest,
+  createTestURL,
+} from './test-setup'
+
+type ExecutionContext = import('@cloudflare/workers-types').ExecutionContext
 
 describe('API Endpoints', () => {
   describe('POST /admin/urls', () => {
     it('should create URL with auto-generated slug', async () => {
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls', {
-        method: 'POST',
-        body: JSON.stringify({ url: 'https://example.com/test' })
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls',
+        {
+          method: 'POST',
+          body: JSON.stringify({ url: 'https://example.com/test' }),
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(201)
@@ -21,12 +34,22 @@ describe('API Endpoints', () => {
     })
 
     it('should create URL with custom slug', async () => {
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls', {
-        method: 'POST',
-        body: JSON.stringify({ url: 'https://example.com/test', slug: 'custom-slug' })
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            url: 'https://example.com/test',
+            slug: 'custom-slug',
+          }),
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(201)
@@ -36,12 +59,19 @@ describe('API Endpoints', () => {
     })
 
     it('should reject invalid URL', async () => {
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls', {
-        method: 'POST',
-        body: JSON.stringify({ url: 'not-a-url' })
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls',
+        {
+          method: 'POST',
+          body: JSON.stringify({ url: 'not-a-url' }),
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(400)
@@ -49,12 +79,19 @@ describe('API Endpoints', () => {
     })
 
     it('should reject dangerous URL', async () => {
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls', {
-        method: 'POST',
-        body: JSON.stringify({ url: 'javascript:alert(1)' })
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls',
+        {
+          method: 'POST',
+          body: JSON.stringify({ url: 'javascript:alert(1)' }),
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(400)
@@ -63,14 +100,27 @@ describe('API Endpoints', () => {
 
     it('should reject duplicate slug', async () => {
       // Create first URL
-      await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(createTestURL('test-slug')))
+      await testEnv.URLS_KV.put(
+        'urls:test-slug',
+        JSON.stringify(createTestURL('test-slug'))
+      )
 
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls', {
-        method: 'POST',
-        body: JSON.stringify({ url: 'https://example.com/test', slug: 'test-slug' })
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            url: 'https://example.com/test',
+            slug: 'test-slug',
+          }),
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(409)
@@ -81,10 +131,14 @@ describe('API Endpoints', () => {
       const request = new Request('http://localhost:8787/admin/urls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: 'https://example.com/test' })
+        body: JSON.stringify({ url: 'https://example.com/test' }),
       })
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(401)
@@ -98,12 +152,19 @@ describe('API Endpoints', () => {
       const testURL = createTestURL('test-slug', 'https://old-url.com')
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls/test-slug', {
-        method: 'PUT',
-        body: JSON.stringify({ url: 'https://new-url.com' })
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls/test-slug',
+        {
+          method: 'PUT',
+          body: JSON.stringify({ url: 'https://new-url.com' }),
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(200)
@@ -113,12 +174,19 @@ describe('API Endpoints', () => {
     })
 
     it('should return 404 for non-existent slug', async () => {
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls/non-existent', {
-        method: 'PUT',
-        body: JSON.stringify({ url: 'https://example.com' })
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls/non-existent',
+        {
+          method: 'PUT',
+          body: JSON.stringify({ url: 'https://example.com' }),
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(404)
@@ -129,12 +197,19 @@ describe('API Endpoints', () => {
       const testURL = createTestURL('test-slug')
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls/test-slug', {
-        method: 'PUT',
-        body: JSON.stringify({ url: 'invalid-url' })
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls/test-slug',
+        {
+          method: 'PUT',
+          body: JSON.stringify({ url: 'invalid-url' }),
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(400)
@@ -148,11 +223,18 @@ describe('API Endpoints', () => {
       const testURL = createTestURL('test-slug')
       await testEnv.URLS_KV.put('urls:test-slug', JSON.stringify(testURL))
 
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls/test-slug', {
-        method: 'DELETE'
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls/test-slug',
+        {
+          method: 'DELETE',
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(200)
@@ -165,11 +247,18 @@ describe('API Endpoints', () => {
     })
 
     it('should return 404 for non-existent slug', async () => {
-      const request = createAuthenticatedRequest('http://localhost:8787/admin/urls/non-existent', {
-        method: 'DELETE'
-      })
+      const request = createAuthenticatedRequest(
+        'http://localhost:8787/admin/urls/non-existent',
+        {
+          method: 'DELETE',
+        }
+      )
 
-      const response = await worker.fetch(request, testEnv, {} as ExecutionContext)
+      const response = await worker.fetch(
+        request,
+        testEnv,
+        {} as ExecutionContext
+      )
       const result = await response.json()
 
       expect(response.status).toBe(404)
