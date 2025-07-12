@@ -19,6 +19,13 @@ A fast, secure URL shortener built with Cloudflare Workers that redirects `dny-l
 │   ├── index.ts    # Main router and core logic
 │   ├── admin.ts    # Admin interface and API
 │   └── types.ts    # TypeScript interfaces
+├── tests/          # Test suite
+│   ├── unit.test.ts       # Core function tests
+│   ├── integration.test.ts # KV storage tests
+│   ├── api.test.ts        # API endpoint tests
+│   ├── admin-ui.test.ts   # Admin interface tests
+│   ├── public.test.ts     # Public route tests
+│   └── test-setup.ts      # Test configuration
 ├── .github/workflows/
 │   └── backup.yml  # Automated backup workflow
 ├── data/
@@ -49,19 +56,52 @@ A fast, secure URL shortener built with Cloudflare Workers that redirects `dny-l
    wrangler secret put API_SECRET
    ```
 
-3. Start development server:
+3. Configure environment variables (optional):
+   ```bash
+   # Copy example environment file
+   cp .env.example .env
+   
+   # Edit .env to set your preferred domain for testing
+   # DOMAIN=localhost:8787 (default)
+   # API_SECRET=your-secret-key-here
+   ```
+
+4. Start development server:
    ```bash
    npm run dev
    ```
 
-### Testing Locally
+### Testing and Quality Checks
+
+Run the comprehensive test suite:
+```bash
+# Run all tests once
+npm test
+
+# Run tests in watch mode during development
+npm run test:watch
+
+# Run TypeScript type checking
+npm run typecheck
+```
+
+The test suite covers:
+- Unit tests for core functions
+- API endpoint integration tests
+- Admin UI form submission tests
+- Public route functionality
+- Authentication and authorization
+
+### Local Testing
 
 The service runs at `http://localhost:8787` with these endpoints:
 
-- `GET /` - Landing page
+- `GET /` - Redirects to main site
 - `GET /{slug}` - Redirect to target URL
-- `GET /admin` - Admin interface
+- `GET /admin` - Admin interface (requires login)
+- `GET /admin/login` - Login page
 - `GET /health` - Health check
+- `GET /all.json` - Public JSON list of all URLs
 
 ### API Endpoints
 
