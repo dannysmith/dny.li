@@ -1,6 +1,7 @@
 # Planning Notes
 
 ## Key Requirements Summary
+
 - Fast global redirects (likely Cloudflare Workers)
 - Admin panel for CRUD operations
 - Authenticated API + public JSON endpoint
@@ -12,36 +13,46 @@
 ## Research Findings
 
 ### 1. OG Data & Rich Previews
+
 **Critical Discovery**: HTTP redirects break OG metadata for social platforms!
+
 - Facebook, Twitter, Slack follow redirects but fail to extract metadata properly
 - **Solution**: Conditional behavior - serve HTML with OG tags to social crawlers, HTTP redirects to users
 - Detect user agents like `facebookexternalhit`, `Twitterbot` and serve metadata-rich pages
 
 ### 2. Cloudflare Architecture
+
 **Perfect fit for requirements**:
+
 - **Free tier**: 100k requests/day, 1k writes/day, 100k reads/day, 1GB storage
 - **Performance**: 20ms average for hot reads, global edge deployment
 - **Cost**: Easily stays within free tier for personal use
 - 1GB storage ≈ 1 million URL mappings
 
 ### 3. Authentication Strategy
+
 **Recommendation**: Start simple, upgrade later
+
 - **Phase 1**: API key authentication (simplest)
 - **Phase 2**: GitHub OAuth for better security
 - Store secrets in Cloudflare environment variables
 
 ### 4. Slug Generation
+
 **Solution**: `unique-names-generator` library
+
 - Generates "apple-cupboard" style slugs
 - Millions of combinations, collision detection
 - Lightweight, perfect for Workers
 
 ### 5. Rate Limiting
+
 **Built-in**: Cloudflare Workers has native rate limiting APIs
 
 ## Recommended Architecture
 
 ### Core Stack
+
 - **Cloudflare Workers**: Global edge compute for redirects
 - **Cloudflare KV**: URL storage (1GB free = ~1M URLs)
 - **Cloudflare D1**: Optional for analytics/metadata (SQLite at edge)
@@ -50,6 +61,7 @@
 ### Two-Component Design
 
 **1. Redirect Worker** (`s.danny.is/*`)
+
 - Handles all redirect requests
 - User-agent detection for social crawlers
 - Serves HTML with OG metadata to social bots
@@ -57,6 +69,7 @@
 - Rate limiting on redirects
 
 **2. Admin API Worker** (`admin.s.danny.is` or subdirectory)
+
 - CRUD operations for URLs
 - API key authentication
 - Web interface for management
@@ -64,17 +77,18 @@
 - Rate limiting on admin operations
 
 ### Data Storage Strategy
+
 ```json
 // KV Storage Structure
 {
   "urls:{slug}": {
     "url": "https://example.com/long-url",
-    "slug": "apple-cupboard", 
+    "slug": "apple-cupboard",
     "created": "2025-01-10T12:00:00Z",
     "updated": "2025-02-09T12:00:00Z",
     "metadata": {
       "title": "Page Title",
-      "description": "Page Description", 
+      "description": "Page Description",
       "image": "https://example.com/og-image.jpg"
     }
   }
@@ -82,6 +96,7 @@
 ```
 
 ### Deployment Strategy
+
 1. **Single Worker**: Start with one worker handling both redirects and admin
 2. **Split Later**: Separate if needed for performance/security
 3. **Custom Domain**: Use Cloudflare for DNS (free)
@@ -90,6 +105,7 @@
 ## Answers & Final Architecture
 
 ### Decisions Made
+
 1. **Metadata**: Auto-fetch with short timeout, fail gracefully if slow/unavailable
 2. **Analytics**: None for MVP - keeps it simple and within free tier limits
 3. **Admin UI**: Simple HTML forms with modern CSS styling
@@ -98,6 +114,7 @@
 ### Simplified MVP Architecture
 
 **Single Cloudflare Worker** handling:
+
 - **Redirect endpoint** (`GET /:slug`)
 - **Admin API** (`POST /admin/urls`, `PUT /admin/urls/:slug`, `DELETE /admin/urls/:slug`)
 - **Admin UI** (`GET /admin` - simple HTML interface)
@@ -108,6 +125,7 @@
 **Metadata fetching**: 3-5 second timeout, extract title/description from HTML, store in KV
 
 ### Benefits of This Simplified Approach
+
 - **Faster development**: No analytics complexity
 - **Lower resource usage**: Stays well within free tier
 - **Easier maintenance**: Single worker, single storage system
@@ -116,8 +134,9 @@
 ## Critical Requirements Analysis
 
 ### ✅ Requirements Coverage Check
+
 - **Fast global redirects**: Cloudflare Workers (20ms edge response)
-- **Instant availability**: KV eventual consistency solved with synchronous validation  
+- **Instant availability**: KV eventual consistency solved with synchronous validation
 - **SEO-friendly**: HTTP 301 redirects for users/search engines
 - **Social media OG**: HTML pages with metadata for social crawlers
 - **Custom slugs**: User input validation and storage
@@ -135,20 +154,23 @@
 ### Phase 1: Project Setup & Basic Structure
 
 #### 1.1 Initialize Cloudflare Workers Project
+
 ```bash
-npm create cloudflare@latest s-danny-is -- --type="Hello World script"
-cd s-danny-is
+npm create cloudflare@latest dny-li
+dny-li -- --type="Hello World script"
+cd dny-li
 npm install unique-names-generator @types/node
 ```
 
 #### 1.2 Configure wrangler.toml
+
 ```toml
-name = "s-danny-is"
+name = "dny-li"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
 [vars]
-DOMAIN = "s.danny.is"
+DOMAIN = "dny.li"
 
 [[kv_namespaces]]
 binding = "URLS_KV"
@@ -162,30 +184,32 @@ id = "production-kv-id"
 ```
 
 #### 1.3 Setup TypeScript Types
+
 ```typescript
 // src/types.ts
 export interface Env {
-  URLS_KV: KVNamespace;
-  API_SECRET: string;
-  DOMAIN: string;
+  URLS_KV: KVNamespace
+  API_SECRET: string
+  DOMAIN: string
 }
 
 export interface URLRecord {
-  url: string;
-  slug: string;
-  created: string;
-  updated: string;
+  url: string
+  slug: string
+  created: string
+  updated: string
   metadata?: {
-    title?: string;
-    description?: string;
-    image?: string;
-  };
+    title?: string
+    description?: string
+    image?: string
+  }
 }
 ```
 
 ### Phase 2: Core Logic in index.ts
 
 #### 2.1 Main Router & Core Functions
+
 ```typescript
 // src/index.ts - Main file containing:
 
@@ -229,6 +253,7 @@ export default {
 ### Phase 3: Admin Interface Module
 
 #### 3.1 Admin Module (admin.ts)
+
 ```typescript
 // src/admin.ts - Complete admin functionality:
 
@@ -236,10 +261,22 @@ export default {
 function authenticateAPIKey(request: Request, env: Env): boolean
 
 // API Endpoints
-export async function handleCreateURL(request: Request, env: Env): Promise<Response>
-export async function handleUpdateURL(request: Request, env: Env): Promise<Response>
-export async function handleDeleteURL(request: Request, env: Env): Promise<Response>
-export async function handleListURLs(request: Request, env: Env): Promise<Response>
+export async function handleCreateURL(
+  request: Request,
+  env: Env
+): Promise<Response>
+export async function handleUpdateURL(
+  request: Request,
+  env: Env
+): Promise<Response>
+export async function handleDeleteURL(
+  request: Request,
+  env: Env
+): Promise<Response>
+export async function handleListURLs(
+  request: Request,
+  env: Env
+): Promise<Response>
 
 // HTML Templates with Pico CSS
 function renderAdminPage(urls: URLRecord[]): string
@@ -247,17 +284,22 @@ function renderCreateForm(): string
 function renderEditForm(record: URLRecord): string
 
 // Main admin request handler
-export async function handleAdminRequest(request: Request, env: Env): Promise<Response>
+export async function handleAdminRequest(
+  request: Request,
+  env: Env
+): Promise<Response>
 ```
 
 ### Phase 4: Consolidated Implementation Notes
 
 #### 4.1 Implementation Strategy
+
 - **index.ts**: Handles all redirect traffic (performance critical) + core utility functions
 - **admin.ts**: Complete admin functionality (auth, API, HTML interface)
 - **types.ts**: Shared TypeScript interfaces
 
 #### 4.2 Key Features Consolidated
+
 - URL validation with security checks (localhost, private IPs, dangerous protocols)
 - Rate limiting (Admin: 50 req/15min, Public: 60 req/min)
 - Metadata auto-fetch with 5s timeout and graceful fallback
@@ -268,6 +310,7 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
 ### Phase 5: GitHub Backup System
 
 #### 5.1 GitHub Actions Workflow
+
 ```yaml
 # .github/workflows/backup.yml
 name: Backup URLs
@@ -291,6 +334,7 @@ jobs:
 ```
 
 #### 5.2 Backup Endpoint
+
 ```typescript
 // Added to admin.ts
 export async function handleBackup(env: Env): Promise<Response>
@@ -300,6 +344,7 @@ export async function handleBackup(env: Env): Promise<Response>
 ### Phase 6: Testing & Deployment
 
 #### 6.1 Local Development
+
 ```bash
 # Test locally
 wrangler dev
@@ -312,6 +357,7 @@ curl -X POST http://localhost:8787/admin/urls \
 ```
 
 #### 6.2 Production Deployment
+
 ```bash
 # Create KV namespace
 wrangler kv:namespace create "URLS_KV"
@@ -327,6 +373,7 @@ wrangler deploy
 ### Phase 7: Domain Configuration
 
 #### 7.1 Cloudflare DNS Setup
+
 - Add CNAME: s.danny.is -> worker-name.subdomain.workers.dev
 - Configure custom domain in Cloudflare Workers dashboard
 - SSL automatically handled by Cloudflare
@@ -334,7 +381,7 @@ wrangler deploy
 ## Simplified File Structure
 
 ```
-s-danny-is/
+dny.li/
 ├── src/
 │   ├── index.ts           # Main router + core logic (redirects, storage, validation, etc.)
 │   ├── admin.ts           # Complete admin functionality (auth, API, UI)

@@ -1,9 +1,9 @@
-name = "s-danny-is"
+name = "dny-li"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
 [vars]
-DOMAIN = "s-danny-is.hi-7f5.workers.dev"
+DOMAIN = "dny-li.hi-7f5.workers.dev"
 # API_SECRET = "dev-secret-123"  # For development only - use wrangler secret put API_SECRET for production
 
 [[kv_namespaces]]

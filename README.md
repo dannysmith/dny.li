@@ -1,6 +1,6 @@
 # URL Shortener Service
 
-A fast, secure URL shortener built with Cloudflare Workers that redirects `s-danny-is.hi-7f5.workers.dev/<slug>` to target URLs.
+A fast, secure URL shortener built with Cloudflare Workers that redirects `dny-li.hi-7f5.workers.dev/<slug>` to target URLs.
 
 ## Features
 
@@ -31,18 +31,20 @@ A fast, secure URL shortener built with Cloudflare Workers that redirects `s-dan
 ### Local Setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Configure Cloudflare (one-time setup):
+
    ```bash
    # Create KV namespaces
    wrangler kv:namespace create "URLS_KV"
    wrangler kv:namespace create "URLS_KV" --preview
-   
+
    # Update wrangler.toml with the returned IDs
-   
+
    # Set API secret
    wrangler secret put API_SECRET
    ```
@@ -66,19 +68,20 @@ The service runs at `http://localhost:8787` with these endpoints:
 **Authentication**: Include `Authorization: Bearer <API_SECRET>` header
 
 - `POST /admin/urls` - Create URL
-- `PUT /admin/urls/{slug}` - Update URL  
+- `PUT /admin/urls/{slug}` - Update URL
 - `DELETE /admin/urls/{slug}` - Delete URL
 - `GET /all.json` - List all URLs (public)
 
 ## Deployment
 
 1. Deploy to Cloudflare:
+
    ```bash
    npm run deploy
    ```
 
 2. Set up GitHub secrets for backups:
-   - `WORKER_URL`: Your worker URL (e.g., `https://s-danny-is.hi-7f5.workers.dev`)
+   - `WORKER_URL`: Your worker URL (e.g., `https://dny-li.hi-7f5.workers.dev`)
 
 ## Manual Setup Required
 

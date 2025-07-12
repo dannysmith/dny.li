@@ -1,5 +1,5 @@
 {
-  "name": "s-danny-is",
+  "name": "dny-li",
   "version": "1.0.0",
   "description": "URL shortener service using Cloudflare Workers",
   "main": "src/index.ts",
@@ -17,7 +17,11 @@
     "typescript": "^5.3.0",
     "wrangler": "^4.24.3"
   },
-  "keywords": ["url-shortener", "cloudflare-workers", "typescript"],
+  "keywords": [
+    "url-shortener",
+    "cloudflare-workers",
+    "typescript"
+  ],
   "author": "Danny",
   "license": "MIT"
 }
