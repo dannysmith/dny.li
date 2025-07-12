@@ -475,30 +475,9 @@ export default {
       return handleAdminRequest(request, env)
     }
 
-    // Root path - show simple landing page
+    // Root path - redirect to main site
     if (path === '/' || path === '') {
-      return new Response(
-        `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>URL Shortener</title>
-            <style>
-                body { font-family: system-ui; max-width: 600px; margin: 50px auto; padding: 20px; }
-                h1 { color: #333; }
-                a { color: #0066cc; }
-            </style>
-        </head>
-        <body>
-            <h1>URL Shortener</h1>
-            <p>This is a private URL shortening service.</p>
-        </body>
-        </html>
-      `,
-        {
-          headers: { 'Content-Type': 'text/html' },
-        }
-      )
+      return Response.redirect('https://danny.is', 302)
     }
 
     // Extract slug from path
