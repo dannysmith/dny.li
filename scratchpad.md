@@ -4,15 +4,15 @@
 
 ### Admin UI Improvements
 
-- [ ] Move th URL creation form to the top of the page and remove the heading
-- [ ] Auto-focus the "URL to shortern" box on page load
-- [ ] Copy the new short URL to the clipboard on creation of a new shortURL
-- [ ] Give th UI some polish and make it feel a more modern and slick
-- [ ] Add a quick copy button to the URL cards
+- [x] Move th URL creation form to the top of the page and remove the heading
+- [x] Auto-focus the "URL to shortern" box on page load
+- [x] Copy the new short URL to the clipboard on creation of a new shortURL
+- [x] Give th UI some polish and make it feel a more modern and slick
+- [x] Add a quick copy button to the URL cards
 
 ### Technical Improvements
 
-- [ ] Redirect GET requests to `/` to `https://danny.is`
+- [x] Redirect GET requests to `/` to `https://danny.is`
 - [ ] Write simple, FAST automated tests to check the functionality works. These must run reliably in a local environment and properly tear down any seed data or stuff they create afterwards:
   - [ ] All API Endpoints
   - [ ] All admin endpoints
