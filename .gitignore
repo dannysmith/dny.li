@@ -12,6 +12,8 @@ build/
 .env
 .env.local
 .env.production
+.dev.vars
+.dev.vars.*
 
 # Wrangler cache and logs
 .wrangler/
