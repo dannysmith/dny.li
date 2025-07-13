@@ -1,5 +1,64 @@
 [
   {
+    "url": "https://www.youtube.com/watch?v=du7GmWGUM5Y",
+    "slug": "21-phoenixnew-youtube",
+    "created": "2025-07-12T18:32:36.289Z",
+    "updated": "2025-07-12T18:32:36.289Z",
+    "metadata": {
+      "title": "- YouTube",
+      "description": "Enjoy the videos and music that you love, upload original content and share it all with friends, family and the world on YouTube."
+    }
+  },
+  {
+    "url": "https://simonwillison.net/2025/Jun/23/phoenix-new/",
+    "slug": "phoenixnew-is-flys-entry-into-the-prompt-driven-ap",
+    "created": "2025-07-12T18:31:30.901Z",
+    "updated": "2025-07-12T18:31:30.901Z",
+    "metadata": {
+      "title": "Phoenix.new is Fly’s entry into the prompt-driven app development space",
+      "description": "Here’s a fascinating new entrant into the AI-assisted-programming / coding-agents space by Fly.io, introduced on their blog in Phoenix.new – The Remote AI Runtime for Phoenix: describe an app in …",
+      "image": "https://static.simonwillison.net/static/2025/phoenix-new.jpg"
+    }
+  },
+  {
+    "url": "https://simonwillison.net/2025/Jun/23/phoenix-new/",
+    "slug": "testytest",
+    "created": "2025-07-12T18:15:25.662Z",
+    "updated": "2025-07-12T18:15:25.662Z",
+    "metadata": {
+      "title": "Phoenix.new is Fly’s entry into the prompt-driven app development space",
+      "description": "Here’s a fascinating new entrant into the AI-assisted-programming / coding-agents space by Fly.io, introduced on their blog in Phoenix.new – The Remote AI Runtime for Phoenix: describe an app in …",
+      "image": "https://static.simonwillison.net/static/2025/phoenix-new.jpg"
+    }
+  },
+  {
+    "url": "https://x.com/jeremyphoward/status/1943871263392326083",
+    "slug": "grokky",
+    "created": "2025-07-12T18:11:19.500Z",
+    "updated": "2025-07-12T18:11:19.500Z",
+    "metadata": {}
+  },
+  {
+    "url": "https://simonwillison.net/",
+    "slug": "thinggy",
+    "created": "2025-07-12T18:10:46.491Z",
+    "updated": "2025-07-12T18:10:46.491Z",
+    "metadata": {
+      "title": "Simon Willison’s Weblog"
+    }
+  },
+  {
+    "url": "https://simonwillison.net/2025/Jul/12/grok-4-heavy/",
+    "slug": "grok-lols",
+    "created": "2025-07-12T17:50:45.469Z",
+    "updated": "2025-07-12T17:50:45.469Z",
+    "metadata": {
+      "title": "Grok 4 Heavy won&#x27;t reveal its system prompt",
+      "description": "Grok 4 Heavy is the &quot;think much harder&quot; version of Grok 4 that&#x27;s currenly only available on their $300/month plan. Jeremy Howard relays a report from a Grok 4 Heavy …",
+      "image": "https://static.simonwillison.net/static/2025/grok-no-system-prompt.jpg"
+    }
+  },
+  {
     "url": "https://example.com/",
     "slug": "example",
     "created": "2025-07-12T13:37:28.377Z",
