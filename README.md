@@ -4,9 +4,9 @@ A fast URL shortener with Cloudflare Workers backend and Chrome extension fronte
 
 ## What It Does
 
-- **Backend**: Cloudflare Worker that redirects `dny.li/<slug>` to target URLs
-- **Chrome Extension**: Side panel for creating short URLs from any webpage
-- **Admin Interface**: Web interface for managing URLs at `dny.li/admin`
+- **Backend**: Cloudflare Worker that redirects `dny.li/<slug>` to target URLs.
+- **Chrome Extension**: Side panel for creating short URLs from any webpage.
+- **Admin Interface**: Web interface for managing URLs at `dny.li/admin`.
 
 ## Architecture
 
